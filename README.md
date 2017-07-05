@@ -21,7 +21,7 @@ A POSIX socket wrapper written in swift.
 $ gem install cocoapods
 ```
 
-To integrate LinearProgressView into your Xcode project using CocoaPods, specify it in your `Podfile`:
+To integrate Socket.swift into your Xcode project using CocoaPods, specify it in your `Podfile`:
 
 ```ruby
 source 'https://github.com/CocoaPods/Specs.git'
