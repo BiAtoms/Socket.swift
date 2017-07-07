@@ -1,4 +1,4 @@
-//
+			//
 //  SocketSwiftTests.swift
 //  SocketSwiftTests
 //
@@ -11,26 +11,41 @@ import XCTest
 
 class SocketSwiftTests: XCTestCase {
     
-    override func setUp() {
-        super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-    
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-        super.tearDown()
-    }
-    
     func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        let server = try! Socket.tcpListening(port: 8090)
+        
+        let client = try! Socket(.IPv4)
+        try! client.connect(port: 8090)
+        
+        let bytes = "Hello World".bytes
+        
+        let writableClient = try! server.accept();
+        try! writableClient.write(bytes, length: bytes.count)
+        writableClient.close()
+        
+        var readBytes = [Byte]()
+        (0..<bytes.count).forEach { _ in
+            readBytes.append(try! client.read())
+        }
+        
+        
+        XCTAssertEqual(readBytes, bytes)
+        client.close()
     }
     
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    func testError() {
+        do {
+            let socket = try Socket.tcpListening(port: 80)
+        } catch let error where (error as! Socket.Error) == Socket.Error.aa {
+            print(error)
+        } catch {
+            print("baddd")
         }
     }
-    
+}
+
+private extension String {
+    var bytes: [Byte] {
+        return [Byte](self.utf8)
+    }
 }
