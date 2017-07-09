@@ -36,7 +36,7 @@
 		9DF8834E1F0CCAB60060C11F /* SocketSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SocketSwift.h; sourceTree = "<group>"; };
 		9DF8834F1F0CCAB60060C11F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9DF883541F0CCAB60060C11F /* SocketSwiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SocketSwiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		9DF883591F0CCAB60060C11F /* SocketSwiftTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketSwiftTests.swift; sourceTree = "<group>"; };
+		9DF883591F0CCAB60060C11F /* SocketSwiftTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SocketSwiftTests.swift; path = SocketSwiftTests/SocketSwiftTests.swift; sourceTree = "<group>"; };
 		9DF8835B1F0CCAB60060C11F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9DF883651F0CCAD00060C11F /* Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Socket.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -60,6 +60,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9D8B84D91F12A6E4008EA6FA /* SocketSwiftTests */ = {
+			isa = PBXGroup;
+			children = (
+				9DF883591F0CCAB60060C11F /* SocketSwiftTests.swift */,
+			);
+			name = SocketSwiftTests;
+			sourceTree = "<group>";
+		};
 		9DF883411F0CCAB60060C11F = {
 			isa = PBXGroup;
 			children = (
@@ -95,7 +103,7 @@
 		9DF883581F0CCAB60060C11F /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				9DF883591F0CCAB60060C11F /* SocketSwiftTests.swift */,
+				9D8B84D91F12A6E4008EA6FA /* SocketSwiftTests */,
 				9DF8835B1F0CCAB60060C11F /* Info.plist */,
 			);
 			path = Tests;

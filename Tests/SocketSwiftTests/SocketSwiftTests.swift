@@ -1,4 +1,4 @@
-			//
+//
 //  SocketSwiftTests.swift
 //  SocketSwiftTests
 //
@@ -42,6 +42,11 @@ class SocketSwiftTests: XCTestCase {
             print("baddd")
         }
     }
+    
+    static var allTests = [
+        ("testExample", testExample),
+        ("testError", testError)
+        ]
 }
 
 private extension String {

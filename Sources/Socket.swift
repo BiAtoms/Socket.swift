@@ -13,6 +13,26 @@ public typealias Byte = UInt8
 public typealias Port = in_port_t
 public typealias SocketAddress = sockaddr
 
+struct OS {
+    #if os(Linux)
+    static let recv = Glibc.recv
+    static let close = Glibc.close
+    static let bind = Glibc.bind
+    static let connect = Glibc.connect
+    static let listen = Glibc.listen
+    static let accept = Glibc.accept
+    static let write = Glibc.write
+    #else
+    static let recv = Darwin.recv
+    static let close = Darwin.close
+    static let bind = Darwin.bind
+    static let connect = Darwin.connect
+    static let listen = Darwin.listen
+    static let accept = Darwin.accept
+    static let write = Darwin.write
+    #endif	
+}
+
 open class Socket {
     open let fileDescriptor: FileDescriptor
     
@@ -20,19 +40,19 @@ open class Socket {
         self.fileDescriptor = fileDescriptor
     }
        
-    required public init(_ family: Family) throws {
-        self.fileDescriptor = try ing{ socket(family.rawValue, SOCK_STREAM, 0) }
+    required public init(_ family: Family, type: Type = .stream) throws {
+        self.fileDescriptor = try ing{ socket(family.rawValue, type.rawValue, 0) }
     }
     
     open func close() {
         //Dont close after an error. see http://man7.org/linux/man-pages/man2/close.2.html#NOTES
         //TODO: Handle error on close
-        _ = Darwin.close(fileDescriptor)
+        _ = OS.close(fileDescriptor)
     }
     
     open func read() throws -> Byte {
         var byte: Byte = 0
-        let recived = Darwin.recv(fileDescriptor, &byte, 1, 0)
+        let recived = OS.recv(fileDescriptor, &byte, 1, 0)
         if recived <= 0 {//-1 is an error, 0 depends. see http://man7.org/linux/man-pages/man2/recv.2.html#RETURN_VALUE
             throw Error(errno: errno)
         }
@@ -42,7 +62,7 @@ open class Socket {
     open func write(_ buffer: UnsafeRawPointer, length: Int) throws {
         var totalWritten = 0
         while totalWritten < length {
-            let written = Darwin.write(fileDescriptor, buffer + totalWritten, length - totalWritten)
+            let written = OS.write(fileDescriptor, buffer + totalWritten, length - totalWritten)
             if written <= 0 { //see http://man7.org/linux/man-pages/man2/write.2.html#RETURN_VALUE
                 throw Error(errno: errno)
             }
@@ -57,21 +77,21 @@ open class Socket {
     
     open func bind(port: Port, address: String? = nil) throws {
         var addr = SocketAddress(port: port, address: address)
-        try ing {  Darwin.bind(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
+        try ing {  OS.bind(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
     }
     
     open func connect(port: Port, address: String? = nil) throws {
         var addr = SocketAddress(port: port, address: address)
-        try ing {  Darwin.connect(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
+        try ing {  OS.connect(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
     }
     
     open func listen(backlog: Int32 = SOMAXCONN) throws {
-        try ing { Darwin.listen(fileDescriptor, backlog) }
+        try ing { OS.listen(fileDescriptor, backlog) }
     }
     
     open func accept() throws -> Self {
         var addrlen: socklen_t = 0, addr = sockaddr()
-        let client = try ing { Darwin.accept(fileDescriptor, &addr, &addrlen) }
+        let client = try ing { OS.accept(fileDescriptor, &addr, &addrlen) }
         return type(of: self).init(with: client)
     }
 }
@@ -96,12 +116,15 @@ extension Socket {
 
 extension SocketAddress {
     public init(port: Port, address: String? = nil) {
-        var addr = sockaddr_in(
-            sin_len: UInt8(MemoryLayout<sockaddr_in>.stride),
-            sin_family: UInt8(AF_INET),
-            sin_port: port.bigEndian,
-            sin_addr: in_addr(s_addr: in_addr_t(0)),
-            sin_zero:(0, 0, 0, 0, 0, 0, 0, 0))
+        var addr = sockaddr_in()
+        #if os(Linux)
+        #else
+            addr.sin_len = UInt8(MemoryLayout<sockaddr_in>.stride)
+        #endif
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = port.bigEndian
+        addr.sin_addr = in_addr(s_addr: in_addr_t(0))
+        addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
         if let address = address, address.withCString({ cstring in inet_pton(AF_INET, cstring, &addr.sin_addr) }) == 1 {
             // print("\(address) is converted to \(addr.sin_addr).")
         } else {
