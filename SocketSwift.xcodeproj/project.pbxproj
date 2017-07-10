@@ -11,6 +11,8 @@
 		9D45FE4F1F0F80FB00079B8A /* Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D45FE4E1F0F80FB00079B8A /* Type.swift */; };
 		9D81A4561F0F975C00EAC293 /* Option.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D81A4551F0F975C00EAC293 /* Option.swift */; };
 		9D81A4581F0F978F00EAC293 /* Family.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D81A4571F0F978F00EAC293 /* Family.swift */; };
+		9DB700A61F131ABA00252751 /* Protocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB700A51F131ABA00252751 /* Protocol.swift */; };
+		9DB700A81F131FBD00252751 /* OS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB700A71F131FBD00252751 /* OS.swift */; };
 		9DF883551F0CCAB60060C11F /* SocketSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9DF8834B1F0CCAB60060C11F /* SocketSwift.framework */; };
 		9DF8835A1F0CCAB60060C11F /* SocketSwiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DF883591F0CCAB60060C11F /* SocketSwiftTests.swift */; };
 		9DF8835C1F0CCAB60060C11F /* SocketSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = 9DF8834E1F0CCAB60060C11F /* SocketSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -32,6 +34,8 @@
 		9D45FE4E1F0F80FB00079B8A /* Type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Type.swift; sourceTree = "<group>"; };
 		9D81A4551F0F975C00EAC293 /* Option.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Option.swift; sourceTree = "<group>"; };
 		9D81A4571F0F978F00EAC293 /* Family.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Family.swift; sourceTree = "<group>"; };
+		9DB700A51F131ABA00252751 /* Protocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Protocol.swift; sourceTree = "<group>"; };
+		9DB700A71F131FBD00252751 /* OS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OS.swift; sourceTree = "<group>"; };
 		9DF8834B1F0CCAB60060C11F /* SocketSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SocketSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9DF8834E1F0CCAB60060C11F /* SocketSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SocketSwift.h; sourceTree = "<group>"; };
 		9DF8834F1F0CCAB60060C11F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -96,6 +100,8 @@
 				9D45FE4E1F0F80FB00079B8A /* Type.swift */,
 				9D81A4551F0F975C00EAC293 /* Option.swift */,
 				9D81A4571F0F978F00EAC293 /* Family.swift */,
+				9DB700A51F131ABA00252751 /* Protocol.swift */,
+				9DB700A71F131FBD00252751 /* OS.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -225,6 +231,8 @@
 				9D81A4581F0F978F00EAC293 /* Family.swift in Sources */,
 				9D81A4561F0F975C00EAC293 /* Option.swift in Sources */,
 				9DF883661F0CCAD00060C11F /* Socket.swift in Sources */,
+				9DB700A81F131FBD00252751 /* OS.swift in Sources */,
+				9DB700A61F131ABA00252751 /* Protocol.swift in Sources */,
 				9D005CFD1F0E37380089AF96 /* Error.swift in Sources */,
 				9D45FE4F1F0F80FB00079B8A /* Type.swift in Sources */,
 			);

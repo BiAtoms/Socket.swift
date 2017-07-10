@@ -6,10 +6,9 @@
 //  Copyright © 2017 BiAtoms. All rights reserved.
 //
 
-import Foundation
+import Foundation //Darwin or Glibc
+
 #if os(Linux)
-import Glibc
-    
 private let SOCK_STREAM = Int32(Glibc.SOCK_STREAM.rawValue)
 private let SOCK_DGRAM = Int32(Glibc.SOCK_DGRAM.rawValue)
 private let SOCK_RAW = Int32( Glibc.SOCK_RAW.rawValue)

@@ -14,7 +14,7 @@ class SocketSwiftTests: XCTestCase {
     func testExample() {
         let server = try! Socket.tcpListening(port: 8090)
         
-        let client = try! Socket(.IPv4)
+        let client = try! Socket(.inet)
         try! client.connect(port: 8090)
         
         let bytes = "Hello World".bytes

@@ -13,26 +13,6 @@ public typealias Byte = UInt8
 public typealias Port = in_port_t
 public typealias SocketAddress = sockaddr
 
-struct OS {
-    #if os(Linux)
-    static let recv = Glibc.recv
-    static let close = Glibc.close
-    static let bind = Glibc.bind
-    static let connect = Glibc.connect
-    static let listen = Glibc.listen
-    static let accept = Glibc.accept
-    static let write = Glibc.write
-    #else
-    static let recv = Darwin.recv
-    static let close = Darwin.close
-    static let bind = Darwin.bind
-    static let connect = Darwin.connect
-    static let listen = Darwin.listen
-    static let accept = Darwin.accept
-    static let write = Darwin.write
-    #endif	
-}
-
 open class Socket {
     open let fileDescriptor: FileDescriptor
     
@@ -40,8 +20,8 @@ open class Socket {
         self.fileDescriptor = fileDescriptor
     }
        
-    required public init(_ family: Family, type: Type = .stream) throws {
-        self.fileDescriptor = try ing{ socket(family.rawValue, type.rawValue, 0) }
+    required public init(_ family: Family, type: Type = .stream, protocol: Protocol = .tcp) throws {
+        self.fileDescriptor = try ing{ socket(family.rawValue, type.rawValue, `protocol`.rawValue) }
     }
     
     open func close() {
@@ -98,7 +78,7 @@ open class Socket {
 extension Socket {
     open class func tcpListening(port: Port, address: String? = nil, maxPendingConnection: Int32 = SOMAXCONN) throws -> Self {
         
-        let socket = try self.init(.IPv4)
+        let socket = try self.init(.inet)
         try socket.set(option: .reuseAddress, true)
         try socket.bind(port: port, address: address)
         try socket.listen(backlog: maxPendingConnection)

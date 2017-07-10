@@ -6,7 +6,7 @@
 //  Copyright © 2017 BiAtoms. All rights reserved.
 //
 
-import Foundation
+import Foundation //Darwin or Glibc
 
 extension Socket {
     public struct Option: RawRepresentable {
