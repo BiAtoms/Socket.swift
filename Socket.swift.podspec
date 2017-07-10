@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name             = 'Socket.swift'
-    s.version          = '1.1'
+    s.version          = '1.3'
     s.summary          = 'A POSIX socket wrapper written in swift.'
     s.homepage         = 'https://github.com/BiAtoms/Socket.swift'
     s.license          = { :type => 'MIT', :file => 'LICENSE' }
