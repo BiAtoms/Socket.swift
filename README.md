@@ -54,6 +54,19 @@ Then, run the following command:
 ```bash
 $ pod install
 ```
+
+### Swift Package Manager
+
+The [Swift Package Manager](https://swift.org/package-manager/) is a tool for automating the distribution of Swift code and is integrated into the `swift` compiler. It is in early development, but Socket.swift does support its use on supported platforms. 
+
+Once you have your Swift package set up, adding Socket.swift as a dependency is as easy as adding it to the `dependencies` value of your `Package.swift`.
+
+```swift
+dependencies: [
+    .Package(url: "https://github.com/BiAtoms/Socket.swift.git", majorVersion: 2)
+]
+```
+
 ### Manually
 Just drag and drop the files in the [Sources](Sources) folder.
 
