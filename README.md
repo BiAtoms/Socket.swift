@@ -45,7 +45,7 @@ To integrate Socket.swift into your Xcode project using CocoaPods, specify it in
 ```ruby
 source 'https://github.com/CocoaPods/Specs.git'
 target '<Your Target Name>' do
-    pod 'Socket.swift' ~> '1.3'
+    pod 'Socket.swift' ~> '2.0'
 end
 ```
 
