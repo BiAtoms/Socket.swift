@@ -35,7 +35,7 @@ class SocketSwiftTests: XCTestCase {
     
     func testError() {
         do {
-            let socket = try Socket.tcpListening(port: 80)
+            _ = try Socket.tcpListening(port: 80)
         } catch let error where (error as! Socket.Error) == Socket.Error.aa {
             print(error)
         } catch {
