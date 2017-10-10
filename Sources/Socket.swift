@@ -38,7 +38,15 @@ open class Socket {
         }
         return byte
     }
-    
+
+    open func read(_ buffer: inout [Byte], bufferSize: Int) throws -> Int {
+        let received = OS.recv(fileDescriptor, &buffer, bufferSize, 0)
+        if received == -1 {
+            throw Error(errno: errno)
+        }
+        return received
+    }
+
     open func write(_ buffer: UnsafeRawPointer, length: Int) throws {
         var totalWritten = 0
         while totalWritten < length {

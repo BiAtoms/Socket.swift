@@ -31,6 +31,30 @@ class SocketSwiftTests: XCTestCase {
         
         XCTAssertEqual(readBytes, bytes)
         client.close()
+        server.close()
+    }
+
+    func testReceivingMultipleBytes() {
+        let server = try! Socket.tcpListening(port: 8090)
+
+        let client = try! Socket(.inet)
+        try! client.connect(port: 8090)
+
+        let bytes = "Hello World".bytes
+        let writableClient = try! server.accept();
+        try! writableClient.write(bytes, length: bytes.count)
+        writableClient.close()
+
+        var buffer = [Byte](repeating: 0, count: 16)
+        let totalBytesReceived = try! client.read(&buffer, bufferSize: 16)
+
+        let results = Array(buffer.prefix(totalBytesReceived))
+
+        XCTAssertEqual(totalBytesReceived, 11)
+        XCTAssertEqual(results, bytes)
+
+        client.close();
+        server.close()
     }
     
     func testError() {
@@ -45,8 +69,9 @@ class SocketSwiftTests: XCTestCase {
     
     static var allTests = [
         ("testExample", testExample),
-        ("testError", testError)
-        ]
+        ("testError", testError),
+        ("testReceivingMultipleBytes", testReceivingMultipleBytes)
+    ]
 }
 
 private extension String {
