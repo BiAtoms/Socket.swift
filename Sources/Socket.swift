@@ -12,6 +12,7 @@ public typealias FileDescriptor = Int32
 public typealias Byte = UInt8
 public typealias Port = in_port_t
 public typealias SocketAddress = sockaddr
+public typealias TimeValue = timeval
 
 open class Socket {
     open let fileDescriptor: FileDescriptor
@@ -133,4 +134,14 @@ extension SocketAddress {
             UnsafePointer<SocketAddress>(OpaquePointer($0)).pointee
         }
     }
+}
+
+extension TimeValue {
+    public init(seconds: Int, microseconds: Int = 0) {
+        #if !os(Linux)
+            let microseconds = Int32(microseconds)
+        #endif
+        self.init(tv_sec: seconds, tv_usec: microseconds)
+    }
+
 }

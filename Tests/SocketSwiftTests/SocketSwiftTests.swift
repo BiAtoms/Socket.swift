@@ -57,6 +57,21 @@ class SocketSwiftTests: XCTestCase {
         server.close()
     }
     
+    func testSetOption() throws {
+        //testing only SO_RCVTIMEO
+        
+        let server = try Socket.tcpListening(port: 8090)
+        let client = try Socket(.inet)
+        try client.set(option: .receiveTimeout, TimeValue(seconds: 0, microseconds: 50*1000))
+        try client.connect(port: 8090)
+
+        XCTAssertThrowsError(try client.read(), "Should throw timeout error") { err in
+            XCTAssertEqual(err as? Socket.Error, Socket.Error(errno: EWOULDBLOCK))
+        }
+        client.close()
+        server.close()
+    }
+    
     func testError() {
         do {
             _ = try Socket.tcpListening(port: 80)
@@ -70,7 +85,8 @@ class SocketSwiftTests: XCTestCase {
     static var allTests = [
         ("testExample", testExample),
         ("testError", testError),
-        ("testReceivingMultipleBytes", testReceivingMultipleBytes)
+        ("testReceivingMultipleBytes", testReceivingMultipleBytes),
+        ("testSetOption", testSetOption)
     ]
 }
 

@@ -31,4 +31,11 @@ extension Socket.BaseOption {
     public static let receiveBufferSize = Option<Int32>(rawValue: SO_RCVBUF)
     public static let sendLowWaterMark = Option<Int32>(rawValue: SO_SNDLOWAT)
     public static let receiveLowWaterMark = Option<Int32>(rawValue: SO_RCVLOWAT)
+    public static let sendTimeout = Option<TimeValue>(rawValue: SO_SNDTIMEO)
+    public static let receiveTimeout = Option<TimeValue>(rawValue: SO_RCVTIMEO)
+    
+    #if !os(Linux)
+    public static let noSignalPipe = Option<Bool>(rawValue: SO_NOSIGPIPE)
+    #endif
+    
 }
