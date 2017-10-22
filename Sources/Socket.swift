@@ -33,18 +33,12 @@ open class Socket {
     
     open func read() throws -> Byte {
         var byte: Byte = 0
-        let recived = OS.recv(fileDescriptor, &byte, 1, 0)
-        if recived <= 0 {//-1 is an error, 0 depends. see http://man7.org/linux/man-pages/man2/recv.2.html#RETURN_VALUE
-            throw Error(errno: errno)
-        }
+        try ing { OS.recv(fileDescriptor, &byte, 1, 0) }
         return byte
     }
 
-    open func read(_ buffer: inout [Byte], bufferSize: Int) throws -> Int {
-        let received = OS.recv(fileDescriptor, &buffer, bufferSize, 0)
-        if received == -1 {
-            throw Error(errno: errno)
-        }
+    open func read(_ buffer: UnsafeMutableRawPointer, bufferSize: Int) throws -> Int {
+        let received = try ing { OS.recv(fileDescriptor, buffer, bufferSize, 0) }
         return received
     }
 
@@ -59,17 +53,17 @@ open class Socket {
         }
     }
         
-    open func set<T>(option: Option<T>, _ state: T) throws {
+    open func set<T>(option: Option<T>, _ value: T) throws {
         // setsockopt expects at least Int32 structure, meaning 4 bytes at least.
-        // When the `state` variable is Bool, MemoryLayout<Bool>.size returns 1
+        // When the `value` variable is Bool, MemoryLayout<Bool>.size returns 1 and
         // bytes in memory are garbage except one of them. (eg. [0, 241, 49, 19], first indicates false)
-        // passing a pointer to `state` variable and size of Int32 (which is 4) into setsockopt
-        // would be equal to always passing true since although the byte sequance [0, 241, 49, 19] of state
+        // Passing a pointer to `value` variable and size of Int32 (which is 4) into setsockopt
+        // would be equal to always passing true since although the byte sequance [0, 241, 49, 19] of `value`
         // variable is false as Bool, it is non-zero as an Int32.
         // We avoid it by explicitly checking whether T is Bool and passing Int32 0 or 1.
         
-        let size = state is Bool ? MemoryLayout<Int32>.size : MemoryLayout<T>.size
-        var state: Any = state is Bool ? (state as! Bool == true ? 1 : 0) : state
+        let size = value is Bool ? MemoryLayout<Int32>.size : MemoryLayout<T>.size
+        var state: Any = value is Bool ? (value as! Bool == true ? 1 : 0) : value
         
         try ing { setsockopt(fileDescriptor, SOL_SOCKET, option.rawValue, &state, socklen_t(size)) }
     }
@@ -116,8 +110,7 @@ extension Socket {
 extension SocketAddress {
     public init(port: Port, address: String? = nil) {
         var addr = sockaddr_in()
-        #if os(Linux)
-        #else
+        #if !os(Linux)
             addr.sin_len = UInt8(MemoryLayout<sockaddr_in>.stride)
         #endif
         addr.sin_family = sa_family_t(AF_INET)

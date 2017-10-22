@@ -9,7 +9,7 @@
 import Foundation
 
 @discardableResult
-public func ing(block: (() -> Int32)) throws -> Int32 {
+public func ing<T: SignedInteger>(block: (() -> T)) throws -> T {
     let value = block()
     if value == -1 {
         throw Socket.Error(errno: errno)
