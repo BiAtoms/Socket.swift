@@ -9,11 +9,26 @@
 import Foundation //Darwin or Glibc
 
 extension Socket {
-    public struct Option: RawRepresentable {
+    public class BaseOption: RawRepresentable {
         public let rawValue: Int32
-        public init(rawValue: Int32) {
+        public required init(rawValue: Int32) {
             self.rawValue = rawValue
         }
-        public static let reuseAddress = Option(rawValue: SO_REUSEADDR)
     }
+    
+    public class Option<T>: BaseOption {}
+}
+
+extension Socket.BaseOption {
+    private typealias Option = Socket.Option
+    public static let reuseAddress = Option<Bool>(rawValue: SO_REUSEADDR)
+    public static let reusePort = Option<Bool>(rawValue: SO_REUSEPORT)
+    public static let keepAlive = Option<Bool>(rawValue: SO_KEEPALIVE)
+    public static let debug = Option<Bool>(rawValue: SO_DEBUG)
+    public static let dontRoute = Option<Bool>(rawValue: SO_DONTROUTE)
+    public static let broadcast = Option<Bool>(rawValue: SO_BROADCAST)
+    public static let sendBufferSize = Option<Int32>(rawValue: SO_SNDBUF)
+    public static let receiveBufferSize = Option<Int32>(rawValue: SO_RCVBUF)
+    public static let sendLowWaterMark = Option<Int32>(rawValue: SO_SNDLOWAT)
+    public static let receiveLowWaterMark = Option<Int32>(rawValue: SO_RCVLOWAT)
 }

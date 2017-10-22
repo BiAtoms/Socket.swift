@@ -58,9 +58,19 @@ open class Socket {
         }
     }
         
-    open func set(option: Option, _ state: Bool) throws {
-        var state = state
-        try ing { setsockopt(fileDescriptor, SOL_SOCKET, option.rawValue, &state, socklen_t(MemoryLayout<Int32>.size)) }
+    open func set<T>(option: Option<T>, _ state: T) throws {
+        // setsockopt expects at least Int32 structure, meaning 4 bytes at least.
+        // When the `state` variable is Bool, MemoryLayout<Bool>.size returns 1
+        // bytes in memory are garbage except one of them. (eg. [0, 241, 49, 19], first indicates false)
+        // passing a pointer to `state` variable and size of Int32 (which is 4) into setsockopt
+        // would be equal to always passing true since although the byte sequance [0, 241, 49, 19] of state
+        // variable is false as Bool, it is non-zero as an Int32.
+        // We avoid it by explicitly checking whether T is Bool and passing Int32 0 or 1.
+        
+        let size = state is Bool ? MemoryLayout<Int32>.size : MemoryLayout<T>.size
+        var state: Any = state is Bool ? (state as! Bool == true ? 1 : 0) : state
+        
+        try ing { setsockopt(fileDescriptor, SOL_SOCKET, option.rawValue, &state, socklen_t(size)) }
     }
     
     open func bind(port: Port, address: String? = nil) throws {
