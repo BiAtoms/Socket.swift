@@ -9,7 +9,7 @@
 import Foundation
 
 @discardableResult
-public func ing<T: SignedInteger>(block: (() -> T)) throws -> T {
+public func ing<T: SignedInteger>(_ block: (() -> T)) throws -> T {
     let value = block()
     if value == -1 {
         throw Socket.Error(errno: errno)
@@ -18,19 +18,16 @@ public func ing<T: SignedInteger>(block: (() -> T)) throws -> T {
 }
 
 extension Socket {
-    struct Error: Swift.Error, Equatable, CustomStringConvertible {
-        let errno: Int32
-        
-        init(errno: Int32) {
-            self.errno = errno
-        }
+    public struct Error: Swift.Error, Equatable, CustomStringConvertible {
+        public let errno: Int32
+        public init(errno: Int32) { self.errno = errno }
         
         public static func == (lhs: Error, rhs: Error) -> Bool {
             return lhs.errno == rhs.errno
         }
         
         public var description: String {
-            return "SocketError: " + String(cString: UnsafePointer(strerror(self.errno)))
+            return "SocketError \(self.errno): \(String(cString: UnsafePointer(strerror(self.errno))))."
         }
     }
 }
