@@ -130,11 +130,12 @@ extension SocketAddress {
 }
 
 extension TimeValue {
-    public init(seconds: Int, microseconds: Int = 0) {
+    public init(seconds: Int, milliseconds: Int = 0, microseconds: Int = 0) {
         #if !os(Linux)
             let microseconds = Int32(microseconds)
+            let milliseconds = Int32(milliseconds)
         #endif
-        self.init(tv_sec: seconds, tv_usec: microseconds)
+        self.init(tv_sec: seconds, tv_usec: microseconds + milliseconds * 1000)
     }
 
 }
