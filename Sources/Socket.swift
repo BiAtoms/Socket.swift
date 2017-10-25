@@ -74,10 +74,14 @@ open class Socket {
     }
     
     open func connect(port: Port, address: String? = nil) throws {
-        var addr = SocketAddress(port: port, address: address)
+        try connect(address: SocketAddress(port: port, address: address))
+    }
+
+    open func connect(address: SocketAddress) throws {
+        var addr = address
         try ing {  OS.connect(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
     }
-    
+
     open func listen(backlog: Int32 = SOMAXCONN) throws {
         try ing { OS.listen(fileDescriptor, backlog) }
     }
