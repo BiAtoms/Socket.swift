@@ -91,6 +91,37 @@ open class Socket {
         let client = try ing { OS.accept(fileDescriptor, &addr, &addrlen) }
         return type(of: self).init(with: client)
     }
+    
+    public struct WaitOption: OptionSet {
+        public let rawValue: Int32
+        public init(rawValue: Int32) { self.rawValue = rawValue }
+        
+        public static let read = WaitOption(rawValue: POLLIN)
+        public static let write = WaitOption(rawValue: POLLOUT)
+    }
+    
+
+    /// Wating for socket to become ready to perform I/O.
+    ///
+    /// - Parameters:
+    ///   - option: `option` to wait for. The option can be masked.
+    ///   - timeout: Number of seconds to wait at most.
+    ///   - retryOnInterrupt: If enabled, will retry polling when EINTR error happens.
+    /// - Returns: Boolean indicating availability of `option`, false means timeout.
+    /// - Throws: Socket.Error holding `errno`
+    open func wait(for option: WaitOption, timeout: TimeInterval, retryOnInterrupt: Bool = true) throws -> Bool {
+        var fd = pollfd() //swift zeroes out memory of any struct. no need to memset 0
+        fd.fd = fileDescriptor
+        fd.events = Int16(option.rawValue)
+        
+        var rc: Int32 = 0
+        repeat {
+            rc = poll(&fd, 1, Int32(timeout * 1000))
+        } while retryOnInterrupt && rc == -1 && errno == EINTR //retry on interrupt
+        
+        //-1 will throw error, 0 means timeout, otherwise success
+        return try ing { rc } != 0
+    }
 }
 extension Socket {
     open class func tcpListening(port: Port, address: String? = nil, maxPendingConnection: Int32 = SOMAXCONN) throws -> Self {
