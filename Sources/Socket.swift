@@ -122,6 +122,37 @@ open class Socket {
         //-1 will throw error, 0 means timeout, otherwise success
         return try ing { rc } != 0
     }
+    
+
+    /// Resolves domain names into connectable addresses.
+    ///
+    /// - Parameters:
+    ///   - host: The hostname to dns lookup.
+    ///   - port: The port for SocketAddress.
+    /// - Returns: An array of connectable addresses
+    /// - Throws: Domain name not resolved
+    open func addresses(for host: String, port: Port) throws -> [SocketAddress] {
+        var hints = addrinfo()
+        
+        //TODO: set correct values of current socket
+        hints.ai_family = AF_INET
+        hints.ai_socktype = SOCK_STREAM
+        hints.ai_protocol = IPPROTO_TCP
+        	
+        var addrs: UnsafeMutablePointer<addrinfo>?
+        if getaddrinfo(host, String(port), &hints, &addrs) != 0 {
+            // unable to resolve
+            throw Error(errno: 11) //TODO: fix this thing
+        }
+        defer { freeaddrinfo(addrs) }
+
+        var result: [SocketAddress] = []
+        for addr in sequence(first: addrs!, next: { $0.pointee.ai_next }) {
+            result.append(addr.pointee.ai_addr.pointee)
+        }
+        assert(!result.isEmpty)
+        return result
+    }
 }
 extension Socket {
     open class func tcpListening(port: Port, address: String? = nil, maxPendingConnection: Int32 = SOMAXCONN) throws -> Self {
@@ -152,7 +183,7 @@ extension SocketAddress {
         addr.sin_port = port.bigEndian
         addr.sin_addr = in_addr(s_addr: in_addr_t(0))
         addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
-        if let address = address, address.withCString({ cstring in inet_pton(AF_INET, cstring, &addr.sin_addr) }) == 1 {
+        if let address = address, inet_pton(AF_INET, address, &addr.sin_addr) == 1 {
             // print("\(address) is converted to \(addr.sin_addr).")
         } else {
             // print("\(address) is not converted.")
