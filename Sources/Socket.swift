@@ -20,9 +20,9 @@ open class Socket {
     required public init(with fileDescriptor: FileDescriptor) {
         self.fileDescriptor = fileDescriptor
     }
-       
+    
     required public init(_ family: Family, type: Type = .stream, protocol: Protocol = .tcp) throws {
-        self.fileDescriptor = try ing{ socket(family.rawValue, type.rawValue, `protocol`.rawValue) }
+        self.fileDescriptor = try ing { socket(family.rawValue, type.rawValue, `protocol`.rawValue) }
     }
     
     open func close() {
@@ -36,12 +36,12 @@ open class Socket {
         try ing { OS.recv(fileDescriptor, &byte, 1, 0) }
         return byte
     }
-
+    
     open func read(_ buffer: UnsafeMutableRawPointer, bufferSize: Int) throws -> Int {
         let received = try ing { OS.recv(fileDescriptor, buffer, bufferSize, 0) }
         return received
     }
-
+    
     /// Writes all `length` of the `buffer` into the socket by calling
     /// write(_:size:) in a loop.
     ///
@@ -72,7 +72,7 @@ open class Socket {
         
         return written
     }
-        
+    
     open func set<T>(option: Option<T>, _ value: T) throws {
         // setsockopt expects at least Int32 structure, meaning 4 bytes at least.
         // When the `value` variable is Bool, MemoryLayout<Bool>.size returns 1 and
@@ -100,12 +100,12 @@ open class Socket {
     open func connect(port: Port, address: String? = nil) throws {
         try connect(address: SocketAddress(port: port, address: address))
     }
-
+    
     open func connect(address: SocketAddress) throws {
         var addr = address
-        try ing {  OS.connect(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
+        try ing { OS.connect(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
     }
-
+    
     open func listen(backlog: Int32 = SOMAXCONN) throws {
         try ing { OS.listen(fileDescriptor, backlog) }
     }
@@ -124,7 +124,7 @@ open class Socket {
         public static let write = WaitOption(rawValue: POLLOUT)
     }
     
-
+    
     /// Wating for socket to become ready to perform I/O.
     ///
     /// - Parameters:
@@ -147,7 +147,7 @@ open class Socket {
         return try ing { rc } != 0
     }
     
-
+    
     /// Resolves domain names into connectable addresses.
     ///
     /// - Parameters:
@@ -162,14 +162,14 @@ open class Socket {
         hints.ai_family = AF_INET
         hints.ai_socktype = SOCK_STREAM
         hints.ai_protocol = IPPROTO_TCP
-        	
+        
         var addrs: UnsafeMutablePointer<addrinfo>?
         if getaddrinfo(host, String(port), &hints, &addrs) != 0 {
             // unable to resolve
             throw Error(errno: 11) //TODO: fix this thing
         }
         defer { freeaddrinfo(addrs) }
-
+        
         var result: [SocketAddress] = []
         for addr in sequence(first: addrs!, next: { $0.pointee.ai_next }) {
             result.append(addr.pointee.ai_addr.pointee)
@@ -226,5 +226,4 @@ extension TimeValue {
         #endif
         self.init(tv_sec: seconds, tv_usec: microseconds + milliseconds * 1000)
     }
-
 }
