@@ -33,12 +33,12 @@ open class Socket {
     
     open func read() throws -> Byte {
         var byte: Byte = 0
-        try ing { OS.recv(fileDescriptor, &byte, 1, 0) }
+        try ing { recv(fileDescriptor, &byte, 1, 0) }
         return byte
     }
     
     open func read(_ buffer: UnsafeMutableRawPointer, bufferSize: Int) throws -> Int {
-        let received = try ing { OS.recv(fileDescriptor, buffer, bufferSize, 0) }
+        let received = try ing { recv(fileDescriptor, buffer, bufferSize, 0) }
         return received
     }
     
