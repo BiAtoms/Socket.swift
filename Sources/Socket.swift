@@ -206,10 +206,9 @@ extension SocketAddress {
         addr.sin_family = sa_family_t(AF_INET)
         addr.sin_port = port.bigEndian
         
-        if let address = address, inet_pton(AF_INET, address, &addr.sin_addr) == 1 {
-            // print("\(address) is converted to \(addr.sin_addr).")
-        } else {
-            // print("\(address) is not converted.")
+        if let address = address {
+            let r = inet_pton(AF_INET, address, &addr.sin_addr)
+            assert(r == 1,"\(address) is not converted.")
         }
         
         self = withUnsafePointer(to: &addr) {
