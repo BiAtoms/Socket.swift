@@ -175,14 +175,13 @@ extension Socket {
 
 extension SocketAddress {
     public init(port: Port, address: String? = nil) {
-        var addr = sockaddr_in()
+        var addr = sockaddr_in() //no need to memset 0. Swift does it
         #if !os(Linux)
             addr.sin_len = UInt8(MemoryLayout<sockaddr_in>.stride)
         #endif
         addr.sin_family = sa_family_t(AF_INET)
         addr.sin_port = port.bigEndian
-        addr.sin_addr = in_addr(s_addr: in_addr_t(0))
-        addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
+        
         if let address = address, inet_pton(AF_INET, address, &addr.sin_addr) == 1 {
             // print("\(address) is converted to \(addr.sin_addr).")
         } else {
