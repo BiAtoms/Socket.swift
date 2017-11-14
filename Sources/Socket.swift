@@ -69,8 +69,12 @@ open class Socket {
     }
     
     open func bind(port: Port, address: String? = nil) throws {
-        var addr = SocketAddress(port: port, address: address)
-        try ing {  OS.bind(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
+        try bind(address: SocketAddress(port: port, address: address))
+    }
+    
+    open func bind(address: SocketAddress) throws {
+        var addr = address
+        try ing { OS.bind(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
     }
     
     open func connect(port: Port, address: String? = nil) throws {
