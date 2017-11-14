@@ -42,15 +42,35 @@ open class Socket {
         return received
     }
 
+    /// Writes all `length` of the `buffer` into the socket by calling
+    /// write(_:size:) in a loop.
+    ///
+    /// - Parameters:
+    ///   - buffer: Raw pointer to the buffer.
+    ///   - length: Length of the buffer to be written.
+    /// - Throws: `Socket.Error` holding `errno`
     open func write(_ buffer: UnsafeRawPointer, length: Int) throws {
         var totalWritten = 0
         while totalWritten < length {
-            let written = OS.write(fileDescriptor, buffer + totalWritten, length - totalWritten)
-            if written <= 0 { //see http://man7.org/linux/man-pages/man2/write.2.html#RETURN_VALUE
-                throw Error(errno: errno)
-            }
+            let written = try write(buffer + totalWritten, size: length - totalWritten)
             totalWritten += written
         }
+    }
+    
+    /// Writes bytes to socket
+    ///
+    /// - Parameters:
+    ///   - buffer: Raw pointer to the buffer.
+    ///   - size: Maximum number of bytes to write.
+    /// - Returns: Number of written bytes.
+    /// - Throws: `Socket.Error` holding `errno`
+    open func write(_ buffer: UnsafeRawPointer, size: Int) throws -> Int {
+        let written = OS.write(fileDescriptor, buffer, size)
+        if written <= 0 { //see http://man7.org/linux/man-pages/man2/write.2.html#RETURN_VALUE
+            throw Error(errno: errno)
+        }
+        
+        return written
     }
         
     open func set<T>(option: Option<T>, _ value: T) throws {
