@@ -11,6 +11,19 @@ import XCTest
 
 class SocketSwiftTests: XCTestCase {
     
+    func testTls() {
+        let socket = try! Socket(.inet)
+        let addr = try! socket.addresses(for: "google.com", port: 443).first!
+        try! socket.connect(address: addr)
+        try! socket.startTls(SSL.Configuration(peer: "google.com"))
+        try! socket.write("GET / HTTP/1.1\r\n\r\n".bytes)
+        let expected = "HTTP/1.1 "
+        var buff = [Byte](repeating: 0, count: expected.count)
+        let read = try! socket.read(&buff, bufferSize: buff.count)
+        XCTAssertEqual(read, buff.count)
+        XCTAssertEqual(String(bytes: buff, encoding: .utf8), expected)
+    }
+    
     func testExample() {
         let server = try! Socket.tcpListening(port: 8090)
         
@@ -86,8 +99,9 @@ class SocketSwiftTests: XCTestCase {
         ("testExample", testExample),
         ("testError", testError),
         ("testReceivingMultipleBytes", testReceivingMultipleBytes),
-        ("testSetOption", testSetOption)
-    ]
+        ("testSetOption", testSetOption),
+        ("testTsl", testTls),
+        ]
 }
 
 private extension String {

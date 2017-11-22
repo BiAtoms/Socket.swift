@@ -16,6 +16,7 @@ public typealias TimeValue = timeval
 
 open class Socket {
     open let fileDescriptor: FileDescriptor
+    open var ssl: SSL?
     
     required public init(with fileDescriptor: FileDescriptor) {
         self.fileDescriptor = fileDescriptor
@@ -28,6 +29,7 @@ open class Socket {
     open func close() {
         //Dont close after an error. see http://man7.org/linux/man-pages/man2/close.2.html#NOTES
         //TODO: Handle error on close
+        ssl?.close()
         _ = OS.close(fileDescriptor)
     }
     
@@ -38,6 +40,9 @@ open class Socket {
     }
     
     open func read(_ buffer: UnsafeMutableRawPointer, bufferSize: Int) throws -> Int {
+        if let ssl = ssl {
+            return try ssl.read(buffer, size: bufferSize)
+        }
         let received = try ing { recv(fileDescriptor, buffer, bufferSize, 0) }
         return received
     }
@@ -65,6 +70,10 @@ open class Socket {
     /// - Returns: Number of written bytes.
     /// - Throws: `Socket.Error` holding `errno`
     open func write(_ buffer: UnsafeRawPointer, size: Int) throws -> Int {
+        if let ssl = ssl {
+            return try ssl.write(buffer, size: size)
+        }
+        
         let written = OS.write(fileDescriptor, buffer, size)
         if written <= 0 { //see http://man7.org/linux/man-pages/man2/write.2.html#RETURN_VALUE
             throw Error(errno: errno)
@@ -148,7 +157,7 @@ open class Socket {
     }
     
     
-    /// Resolves domain names into connectable addresses.
+    /// Resolves domain into connectable addresses.
     ///
     /// - Parameters:
     ///   - host: The hostname to dns lookup.
@@ -177,7 +186,13 @@ open class Socket {
         assert(!result.isEmpty)
         return result
     }
+    
+    
+    open func startTls(_ config: SSL.Configuration) throws {
+        self.ssl = try SSL(self.fileDescriptor, config) //handshakes as well
+    }
 }
+
 extension Socket {
     open class func tcpListening(port: Port, address: String? = nil, maxPendingConnection: Int32 = SOMAXCONN) throws -> Self {
         
@@ -208,7 +223,7 @@ extension SocketAddress {
         
         if let address = address {
             let r = inet_pton(AF_INET, address, &addr.sin_addr)
-            assert(r == 1,"\(address) is not converted.")
+            assert(r == 1, "\(address) is not converted.")
         }
         
         self = withUnsafePointer(to: &addr) {
