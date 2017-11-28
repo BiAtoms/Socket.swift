@@ -168,9 +168,9 @@ open class Socket {
         var hints = addrinfo()
         
         //TODO: set correct values of current socket
-        hints.ai_family = AF_INET
-        hints.ai_socktype = SOCK_STREAM
-        hints.ai_protocol = IPPROTO_TCP
+        hints.ai_family = Family.inet.rawValue
+        hints.ai_socktype = Type.stream.rawValue
+        hints.ai_protocol = Protocol.tcp.rawValue
         
         var addrs: UnsafeMutablePointer<addrinfo>?
         if getaddrinfo(host, String(port), &hints, &addrs) != 0 {
