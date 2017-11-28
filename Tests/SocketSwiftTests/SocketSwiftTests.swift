@@ -15,7 +15,7 @@ class SocketSwiftTests: XCTestCase {
         let socket = try! Socket(.inet)
         let addr = try! socket.addresses(for: "google.com", port: 443).first!
         try! socket.connect(address: addr)
-        try! socket.startTls(SSL.Configuration(peer: "google.com"))
+        try! socket.startTls(TLS.Configuration(peer: "google.com"))
         try! socket.write("GET / HTTP/1.1\r\n\r\n".bytes)
         let expected = "HTTP/1.1 "
         var buff = [Byte](repeating: 0, count: expected.count)

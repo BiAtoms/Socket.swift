@@ -16,7 +16,7 @@ public typealias TimeValue = timeval
 
 open class Socket {
     open let fileDescriptor: FileDescriptor
-    open var ssl: SSL?
+    open var tls: TLS?
     
     required public init(with fileDescriptor: FileDescriptor) {
         self.fileDescriptor = fileDescriptor
@@ -29,7 +29,7 @@ open class Socket {
     open func close() {
         //Dont close after an error. see http://man7.org/linux/man-pages/man2/close.2.html#NOTES
         //TODO: Handle error on close
-        ssl?.close()
+        tls?.close()
         _ = OS.close(fileDescriptor)
     }
     
@@ -40,7 +40,7 @@ open class Socket {
     }
     
     open func read(_ buffer: UnsafeMutableRawPointer, bufferSize: Int) throws -> Int {
-        if let ssl = ssl {
+        if let ssl = tls {
             return try ssl.read(buffer, size: bufferSize)
         }
         let received = try ing { recv(fileDescriptor, buffer, bufferSize, 0) }
@@ -70,7 +70,7 @@ open class Socket {
     /// - Returns: Number of written bytes.
     /// - Throws: `Socket.Error` holding `errno`
     open func write(_ buffer: UnsafeRawPointer, size: Int) throws -> Int {
-        if let ssl = ssl {
+        if let ssl = tls {
             return try ssl.write(buffer, size: size)
         }
         
@@ -188,8 +188,8 @@ open class Socket {
     }
     
     
-    open func startTls(_ config: SSL.Configuration) throws {
-        self.ssl = try SSL(self.fileDescriptor, config) //handshakes as well
+    open func startTls(_ config: TLS.Configuration) throws {
+        self.tls = try TLS(self.fileDescriptor, config) //handshakes as well
     }
 }
 

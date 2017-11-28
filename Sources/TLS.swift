@@ -1,5 +1,5 @@
 //
-//  SSL.swift
+//  TLS.swift
 //  SocketSwift
 //
 //  Created by Orkhan Alikhanov on 11/22/17.
@@ -13,7 +13,7 @@ import Foundation
     private typealias SSLContext = OpaquePointer
 #endif
 
-open class SSL {
+open class TLS {
     #if !os(Linux)
     private var fd: FileDescriptor = 0
     #endif
