@@ -94,14 +94,23 @@ class SocketSwiftTests: XCTestCase {
             print("baddd")
         }
     }
-    
+
+    func testPort() throws {
+        let server = try Socket.tcpListening(port: 8090)
+
+        XCTAssertEqual(try server.port(), 8090)
+
+        server.close()
+    }
+
     static var allTests = [
         ("testExample", testExample),
         ("testError", testError),
         ("testReceivingMultipleBytes", testReceivingMultipleBytes),
         ("testSetOption", testSetOption),
         ("testTsl", testTls),
-        ]
+        ("testPort", testPort)
+    ]
 }
 
 private extension String {

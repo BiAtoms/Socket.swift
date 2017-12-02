@@ -191,6 +191,19 @@ open class Socket {
     open func startTls(_ config: TLS.Configuration) throws {
         self.tls = try TLS(self.fileDescriptor, config) //handshakes as well
     }
+
+    /// Returns the local port number to which the socket is bound.
+    ///
+    /// - Returns: Local port to which the socket is bound.
+    open func port() throws -> Port {
+        var address = sockaddr_in()
+        var len = socklen_t(MemoryLayout.size(ofValue: address))
+        let ptr = UnsafeMutableRawPointer(&address).assumingMemoryBound(to: sockaddr.self)
+
+        try ing { getsockname(fileDescriptor, ptr, &len) }
+
+        return Port(address.sin_port.bigEndian)
+    }
 }
 
 extension Socket {
