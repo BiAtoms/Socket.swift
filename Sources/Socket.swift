@@ -39,11 +39,11 @@ open class Socket {
         return byte
     }
     
-    open func read(_ buffer: UnsafeMutableRawPointer, bufferSize: Int) throws -> Int {
-        if let ssl = tls {
-            return try ssl.read(buffer, size: bufferSize)
+    open func read(_ buffer: UnsafeMutableRawPointer, size: Int) throws -> Int {
+        if let tls = tls {
+            return try tls.read(buffer, size: size)
         }
-        let received = try ing { recv(fileDescriptor, buffer, bufferSize, 0) }
+        let received = try ing { recv(fileDescriptor, buffer, size, 0) }
         return received
     }
     

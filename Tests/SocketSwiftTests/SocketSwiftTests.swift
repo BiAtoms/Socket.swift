@@ -19,7 +19,7 @@ class SocketSwiftTests: XCTestCase {
         try! socket.write("GET / HTTP/1.1\r\n\r\n".bytes)
         let expected = "HTTP/1.1 "
         var buff = [Byte](repeating: 0, count: expected.count)
-        let read = try! socket.read(&buff, bufferSize: buff.count)
+        let read = try! socket.read(&buff, size: buff.count)
         XCTAssertEqual(read, buff.count)
         XCTAssertEqual(String(bytes: buff, encoding: .utf8), expected)
     }
@@ -59,7 +59,7 @@ class SocketSwiftTests: XCTestCase {
         writableClient.close()
 
         var buffer = [Byte](repeating: 0, count: 16)
-        let totalBytesReceived = try! client.read(&buffer, bufferSize: 16)
+        let totalBytesReceived = try! client.read(&buffer, size: 16)
 
         let results = Array(buffer.prefix(totalBytesReceived))
 
