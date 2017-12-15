@@ -31,7 +31,3 @@ extension Socket {
         }
     }
 }
-
-extension Socket.Error {
-    public static let aa = Socket.Error(errno: 13)
-}
