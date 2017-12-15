@@ -7,25 +7,37 @@
 
 A POSIX socket wrapper written in swift.
 
-## OS
+## Features
  
-Works in linux, iOS, macOS and tvOS
+- TLS support
+- Linux, iOS, macOS and tvOS support
+- Clean and understanable code
+
+
+If you consider something needs to be implemented, just [open an issue](issues/new) or make a PR
+
 
 ## Example
 ```swift
-let server = try Socket.tcpListening(port: 8090) //start socket listening at localhost:8090
+let server = try Socket(.inet, type: .stream, protocol: .tcp) // create server socket
+try server.set(option: .reuseAddress, true) // set SO_REUSEADDR to 1
+try server.bind(port: 8090, address: nil) // bind 'localhost:8090' address to the socket
+try server.listen() // allow incoming connections
 
-let client = try Socket(.inet, type: .stream, protocol: .tcp)
-try client.connect(port: 8090) //connecting to the socket at localhost:8090
-let clientAtServerside = try server.accept()
+let client = try Socket(.inet, type: .stream, protocol: .tcp) // create client socket
+try client.connect(port: 8090) // connect to localhost:8090
 
-let bytes = ([UInt8])("Hello World".utf8)
-try clientAtServerside.write(bytes) //sening bytes to the client socket
+let clientAtServerside = try server.accept() // accept client connection
+ 
+let helloBytes = ([UInt8])("Hello World".utf8)
+try clientAtServerside.write(helloBytes) // sending bytes to the client
 clientAtServerside.close()
 
-while let byte = try? client.read() { //reading bytes sent by server socket
-    print(byte)
-}
+var buffer = [UInt8](repeating: 0, count: helloBytes.count) // allocate buffer
+let numberOfReadBytes = try client.read(&buffer, size: helloBytes.count)
+print(numberOfReadBytes == helloBytes.count) // true
+print(buffer == helloBytes) // true
+
 client.close()
 server.close()
 ```
@@ -45,7 +57,7 @@ To integrate Socket.swift into your Xcode project using CocoaPods, specify it in
 ```ruby
 source 'https://github.com/CocoaPods/Specs.git'
 target '<Your Target Name>' do
-    pod 'Socket.swift', '~> 2.0'
+    pod 'Socket.swift', '~> 2.1'
 end
 ```
 
