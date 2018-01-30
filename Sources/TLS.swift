@@ -51,7 +51,7 @@ open class TLS {
             SSLSetIOFuncs(context, sslRead, sslWrite)
             SSLSetConnection(context, &self.fd)
             if let peerName = config.peer {
-                SSLSetPeerDomainName(context, peerName, peerName.characters.count)
+                SSLSetPeerDomainName(context, peerName, peerName.count)
             }
             
             var status: OSStatus = -1
