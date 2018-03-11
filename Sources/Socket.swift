@@ -189,7 +189,8 @@ open class Socket {
     
     
     open func startTls(_ config: TLS.Configuration) throws {
-        self.tls = try TLS(self.fileDescriptor, config) //handshakes as well
+        tls = try TLS(self.fileDescriptor, config)
+        try tls?.handshake()
     }
 
     /// Returns the local port number to which the socket is bound.

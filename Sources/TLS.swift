@@ -10,19 +10,29 @@ import Foundation
 
 #if os(Linux)
     import CLibreSSL
-    private typealias SSLContext = OpaquePointer
+    internal typealias SSLContext = OpaquePointer
+    public typealias Certificate = (cert: Data, key: Data)
+#else
+    public typealias Certificate = CFArray
 #endif
 
 open class TLS {
     #if !os(Linux)
-    private var fd: FileDescriptor = 0
+    open var fd: FileDescriptor { return fdPtr.pointee }
+    open private(set) var fdPtr = UnsafeMutablePointer<FileDescriptor>.allocate(capacity: 1)
     #endif
-    private var context: SSLContext
+    
+    internal var context: SSLContext
     public struct Configuration {
-        let peer: String?
+        public var peer: String?
+        public var certificate: Certificate?
+        public var allowSelfSigned: Bool
+        public var isServer: Bool { return certificate != nil }
         
-        public init(peer: String?) {
+        public init(peer: String? = nil, certificate: Certificate? = nil, allowSelfSigned: Bool = false) {
             self.peer = peer
+            self.certificate = certificate
+            self.allowSelfSigned = allowSelfSigned
         }
     }
     
@@ -32,33 +42,68 @@ open class TLS {
             // TODO: make `try ing { }` throw TlsError with description of
             // String(cString: tls_error(context))
             try ing { tls_init() }
-            context = tls_client()
             
-            let cfg = tls_config_new() // can we free cfg after tls_configure?
+            let cfg = tls_config_new()
+            defer { tls_config_free(cfg) }
+            
+            context = config.isServer ? tls_server() : tls_client()
+            
+            if config.isServer {
+                let cert = config.certificate!
+                _ = try cert.cert.withUnsafeBytes { ptr in
+                    try ing { tls_config_set_cert_mem(cfg, ptr, cert.cert.count) }
+                }
+                _ = try cert.key.withUnsafeBytes { ptr in
+                    try ing { tls_config_set_key_mem(cfg, ptr, cert.key.count) }
+                }
+            } else {
+                if config.allowSelfSigned {
+                    tls_config_insecure_noverifycert(cfg)
+                    // tls_config_insecure_noverifyname(cfg)
+                    // tls_config_insecure_noverifytime(cfg)
+                }
+            }
+            
             try ing { tls_configure(context, cfg) }
             
-            try config.peer!.withCString { s in
-                try ing { tls_connect_socket(self.context, fd, s) }
+            if config.isServer {
+                var newContext: SSLContext?
+                try ing { tls_accept_socket(context, &newContext, fd) }
+                tls_free(context)
+                context = newContext!
+            } else {
+                try ing { tls_connect_socket(self.context, fd, config.peer) }
             }
+        #else
+            self.context = SSLCreateContext(nil, config.isServer ? .serverSide : .clientSide, .streamType)!
+            self.fdPtr.pointee = fd
+            
+            SSLSetIOFuncs(context, sslRead, sslWrite)
+            SSLSetConnection(context, fdPtr)
+            
+            if config.isServer {
+                SSLSetCertificate(context, config.certificate)
+            } else {
+                if let peerName = config.peer {
+                    SSLSetPeerDomainName(context, peerName, peerName.count)
+                }
+                
+                if config.allowSelfSigned {
+                    SSLSetSessionOption(context, .breakOnServerAuth, true)
+                }
+            }
+        #endif
+    }
+    
+    open func handshake() throws {
+        #if os(Linux)
             try ing { tls_handshake(context) }
         #else
-            guard let context = SSLCreateContext(nil, .clientSide, .streamType) else {
-                throw Socket.Error(errno: ENOMEM)
-            }
-            
-            self.context = context
-            self.fd = fd
-            SSLSetIOFuncs(context, sslRead, sslWrite)
-            SSLSetConnection(context, &self.fd)
-            if let peerName = config.peer {
-                SSLSetPeerDomainName(context, peerName, peerName.count)
-            }
-            
             var status: OSStatus = -1
             repeat {
                 status = SSLHandshake(context)
             } while status == errSSLWouldBlock
-            if status != noErr {
+            if status != noErr && status != errSSLPeerAuthCompleted {
                 // print(status, SecCopyErrorMessageString(status, nil)!)
                 try ing { -1 } // throw
             }
@@ -93,11 +138,47 @@ open class TLS {
         #if os(Linux)
             tls_close(context);
             tls_free(context);
-            //	tls_config_free(config);
         #else
             SSLClose(context)
+            fdPtr.deallocate(capacity: 1)
         #endif
     }
+}
+
+extension TLS {
+    #if !os(Linux)
+    open class func importCert(at path: URL, password: String) -> Certificate {
+        let data = FileManager.default.contents(atPath: path.path)! as NSData
+        let options: NSDictionary = [kSecImportExportPassphrase: password]
+
+        var items: CFArray?
+        let status = SecPKCS12Import(data, options, &items)
+        assert(status == noErr)
+        let dictionary = (items! as [AnyObject])[0]
+        let secIdentity = dictionary.value(forKey: kSecImportItemIdentity as String)!
+        let ccerts = dictionary.value(forKey: kSecImportItemCertChain as String) as! [SecCertificate]
+        
+        let certs = [secIdentity] + ccerts.dropFirst().map { $0 as Any }
+        return certs as CFArray
+    }
+    
+    #else
+    open class func importCert(at path: URL, withKey key: URL, password: String?) -> Certificate {
+        var certLen = 0
+        let certMem = tls_load_file(path.path, &certLen, nil)!
+        defer { free(certMem) }
+    
+        var keyLen = 0
+        let keyMem = {
+            password?.withCString {
+                tls_load_file(key.path, &keyLen, UnsafeMutablePointer(mutating: $0))!
+            } ?? tls_load_file(key.path, &keyLen, nil)!
+        }()
+        defer { free(keyMem) }
+    
+        return (Data(bytes: certMem, count: certLen), Data(bytes: keyMem, count: keyLen))
+    }
+    #endif
 }
 
 #if !os(Linux)
