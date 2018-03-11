@@ -35,7 +35,7 @@ open class Socket {
     
     open func read() throws -> Byte {
         var byte: Byte = 0
-        try ing { recv(fileDescriptor, &byte, 1, 0) }
+        _ = try read(&byte, size: 1)
         return byte
     }
     
@@ -132,7 +132,7 @@ open class Socket {
         public static let read = WaitOption(rawValue: POLLIN)
         public static let write = WaitOption(rawValue: POLLOUT)
     }
-    
+    		
     
     /// Wating for socket to become ready to perform I/O.
     ///
