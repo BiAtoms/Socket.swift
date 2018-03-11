@@ -7,66 +7,63 @@
 //
 
 import XCTest
+import Dispatch
 @testable import SocketSwift
 
 class SocketSwiftTests: XCTestCase {
     
-    func testTls() {
+    func testClientReadWriteTLSWithGoogle() {
         let socket = try! Socket(.inet)
         let addr = try! socket.addresses(for: "google.com", port: 443).first!
         try! socket.connect(address: addr)
         try! socket.startTls(TLS.Configuration(peer: "google.com"))
         try! socket.write("GET / HTTP/1.1\r\n\r\n".bytes)
-        let expected = "HTTP/1.1 "
-        var buff = [Byte](repeating: 0, count: expected.count)
-        let read = try! socket.read(&buff, size: buff.count)
-        XCTAssertEqual(read, buff.count)
-        XCTAssertEqual(String(bytes: buff, encoding: .utf8), expected)
+        AssertReadStringEqual(socket: socket, string: "HTTP/1.1 ")
     }
     
-    func testExample() {
-        let server = try! Socket.tcpListening(port: 8090)
+    func testClientServerReadWriteTLS() {
+        let server = try! Socket.tcpListening(port: 4443)
         
-        let client = try! Socket(.inet)
-        try! client.connect(port: 8090)
-        
-        let bytes = "Hello World".bytes
-        
-        let writableClient = try! server.accept();
-        try! writableClient.write(bytes, length: bytes.count)
-        writableClient.close()
-        
-        var readBytes = [Byte]()
-        (0..<bytes.count).forEach { _ in
-            readBytes.append(try! client.read())
+        DispatchQueue(label: "").async {
+            var tls = TLS.Configuration()
+            
+            #if !os(Linux)
+                let path = Bundle(for: SocketSwiftTests.self).url(forResource: "Socket.swift", withExtension: "pfx")!
+                tls.certificate = TLS.importCert(at: path, password: "orkhan1234")
+            #else
+                let file = URL(string: #file)!.appendingPathComponent("../../Socket.swift").standardized
+                tls.certificate = TLS.importCert(at: file.appendingPathExtension("csr"),
+                                                 withKey: file.appendingPathExtension("key"),
+                                                 password: nil)
+            #endif
+            let writableClient = try! server.accept()
+            try! writableClient.startTls(tls)
+            AssertReadStringEqual(socket: writableClient, string: "Hello from client")
+            try! writableClient.write("Hello from server".bytes)
+            writableClient.close()
         }
         
-        
-        XCTAssertEqual(readBytes, bytes)
+        let client = try! Socket(.inet)
+        try! client.connect(port: 4443)
+        try! client.startTls(.init(peer: "www.biatoms.com", allowSelfSigned: true))
+        try! client.write("Hello from client".bytes)
+        AssertReadStringEqual(socket: client, string: "Hello from server")
         client.close()
         server.close()
     }
-
-    func testReceivingMultipleBytes() {
+    
+    func testClientServerReadWrite() {
         let server = try! Socket.tcpListening(port: 8090)
-
+        
         let client = try! Socket(.inet)
         try! client.connect(port: 8090)
-
-        let bytes = "Hello World".bytes
-        let writableClient = try! server.accept();
-        try! writableClient.write(bytes, length: bytes.count)
+        
+        let writableClient = try! server.accept()
+        try! writableClient.write("Hello World".bytes)
         writableClient.close()
-
-        var buffer = [Byte](repeating: 0, count: 16)
-        let totalBytesReceived = try! client.read(&buffer, size: 16)
-
-        let results = Array(buffer.prefix(totalBytesReceived))
-
-        XCTAssertEqual(totalBytesReceived, 11)
-        XCTAssertEqual(results, bytes)
-
-        client.close();
+        AssertReadStringEqual(socket: client, string: "Hello World")
+        
+        client.close()
         server.close()
     }
     
@@ -77,7 +74,7 @@ class SocketSwiftTests: XCTestCase {
         let client = try Socket(.inet)
         try client.set(option: .receiveTimeout, TimeValue(seconds: 0, microseconds: 50*1000))
         try client.connect(port: 8090)
-
+        
         XCTAssertThrowsError(try client.read(), "Should throw timeout error") { err in
             XCTAssertEqual(err as? Socket.Error, Socket.Error(errno: EWOULDBLOCK))
         }
@@ -90,22 +87,20 @@ class SocketSwiftTests: XCTestCase {
             XCTAssertEqual(err as? Socket.Error, Socket.Error(errno: EACCES))
         }
     }
-
+    
     func testPort() throws {
         let server = try Socket.tcpListening(port: 8090)
-
         XCTAssertEqual(try server.port(), 8090)
-
         server.close()
     }
-
+    
     static var allTests = [
-        ("testExample", testExample),
+        ("testPort", testPort),
         ("testError", testError),
-        ("testReceivingMultipleBytes", testReceivingMultipleBytes),
         ("testSetOption", testSetOption),
-        ("testTsl", testTls),
-        ("testPort", testPort)
+        ("testClientServerReadWrite", testClientServerReadWrite),
+        ("testClientServerReadWriteTLS", testClientServerReadWriteTLS),
+        ("testClientReadWriteTLSWithGoogle", testClientReadWriteTLSWithGoogle),
     ]
 }
 
@@ -113,4 +108,17 @@ private extension String {
     var bytes: [Byte] {
         return [Byte](self.utf8)
     }
+}
+
+private extension Array where Element == Byte {
+    var string: String? {
+        return String(bytes: self, encoding: .utf8)
+    }
+}
+
+private func AssertReadStringEqual(socket: Socket, string: String, file: StaticString = #file, line: UInt = #line) {
+    var buff = [Byte](repeating: 0, count: string.count)
+    let bytesRead = try! socket.read(&buff, size: string.count)
+    XCTAssertEqual(bytesRead, string.count, file: file, line: line)
+    XCTAssertEqual(buff.string, string, file: file, line: line)
 }

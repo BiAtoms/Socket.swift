@@ -13,6 +13,7 @@
 		9D81A4581F0F978F00EAC293 /* Family.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D81A4571F0F978F00EAC293 /* Family.swift */; };
 		9DB700A61F131ABA00252751 /* Protocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB700A51F131ABA00252751 /* Protocol.swift */; };
 		9DB700A81F131FBD00252751 /* OS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB700A71F131FBD00252751 /* OS.swift */; };
+		9DC115852054392000BDF181 /* Socket.swift.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 9DC115832054389600BDF181 /* Socket.swift.pfx */; };
 		9DC60D451FC60E8400CFDF26 /* TLS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DC60D441FC60E8400CFDF26 /* TLS.swift */; };
 		9DF883551F0CCAB60060C11F /* SocketSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9DF8834B1F0CCAB60060C11F /* SocketSwift.framework */; };
 		9DF8835A1F0CCAB60060C11F /* SocketSwiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DF883591F0CCAB60060C11F /* SocketSwiftTests.swift */; };
@@ -37,6 +38,7 @@
 		9D81A4571F0F978F00EAC293 /* Family.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Family.swift; sourceTree = "<group>"; };
 		9DB700A51F131ABA00252751 /* Protocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Protocol.swift; sourceTree = "<group>"; };
 		9DB700A71F131FBD00252751 /* OS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OS.swift; sourceTree = "<group>"; };
+		9DC115832054389600BDF181 /* Socket.swift.pfx */ = {isa = PBXFileReference; lastKnownFileType = file; path = Socket.swift.pfx; sourceTree = "<group>"; };
 		9DC60D441FC60E8400CFDF26 /* TLS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLS.swift; sourceTree = "<group>"; };
 		9DF8834B1F0CCAB60060C11F /* SocketSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SocketSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9DF8834E1F0CCAB60060C11F /* SocketSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SocketSwift.h; sourceTree = "<group>"; };
@@ -114,6 +116,7 @@
 			children = (
 				9D8B84D91F12A6E4008EA6FA /* SocketSwiftTests */,
 				9DF8835B1F0CCAB60060C11F /* Info.plist */,
+				9DC115832054389600BDF181 /* Socket.swift.pfx */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -222,6 +225,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9DC115852054392000BDF181 /* Socket.swift.pfx in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
