@@ -9,12 +9,12 @@ A POSIX socket wrapper written in swift.
 
 ## Features
  
-- TLS support
+- TLS/SSL support
 - Linux, iOS, macOS and tvOS support
 - Clean and understanable code
 
 
-If you consider something needs to be implemented, just [open an issue](issues/new) or make a PR
+If you consider something needs to be implemented, just [open an issue](https://github.com/BiAtoms/Socket.swift/issues/new) or make a PR
 
 
 ## Example
@@ -57,7 +57,7 @@ To integrate Socket.swift into your Xcode project using CocoaPods, specify it in
 ```ruby
 source 'https://github.com/CocoaPods/Specs.git'
 target '<Your Target Name>' do
-    pod 'Socket.swift', '~> 2.1'
+    pod 'Socket.swift', '~> 2.2'
 end
 ```
 
