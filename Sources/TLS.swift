@@ -48,6 +48,7 @@ open class TLS {
         #if os(Linux)
             // TODO: make `try ing { }` throw TlsError with description of
             // String(cString: tls_error(context))
+            
             guard TLS.isInitialized else {
                 fatalError("Call TLS.initialize(), concurrent calls will cause crash")
             }
@@ -78,7 +79,12 @@ open class TLS {
             if config.isServer {
                 var newContext: SSLContext?
                 try ing { tls_accept_socket(context, &newContext, fd) }
-                tls_free(context)
+                // FIXME: It seems that server context is needed to be somehow alive.
+                // Although, on accept, it does copy the configurations to the child context
+                // free-ing the server context causes fatal error when the child context
+                // tries to do handshake.
+                
+                // tls_free(context)
                 context = newContext!
             } else {
                 try ing { tls_connect_socket(self.context, fd, config.peer) }
