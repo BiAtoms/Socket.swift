@@ -20,6 +20,13 @@ open class TLS {
     #if !os(Linux)
     open var fd: FileDescriptor { return fdPtr.pointee }
     open private(set) var fdPtr = UnsafeMutablePointer<FileDescriptor>.allocate(capacity: 1)
+    #else
+    open private(set) static var isInitialized = false
+    open static func initialize() throws {
+        guard !isInitialized else { return }
+        try ing { tls_init() }
+        isInitialized = true
+    }
     #endif
     
     internal var context: SSLContext
@@ -41,7 +48,9 @@ open class TLS {
         #if os(Linux)
             // TODO: make `try ing { }` throw TlsError with description of
             // String(cString: tls_error(context))
-            try ing { tls_init() }
+            guard TLS.isInitialized else {
+                fatalError("Call TLS.initialize(), concurrent calls will cause crash")
+            }
             
             let cfg = tls_config_new()
             defer { tls_config_free(cfg) }

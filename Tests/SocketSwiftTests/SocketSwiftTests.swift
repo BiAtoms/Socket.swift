@@ -11,6 +11,13 @@ import Dispatch
 @testable import SocketSwift
 
 class SocketSwiftTests: XCTestCase {
+
+    #if os(Linux)
+    override class func setUp() {
+        super.setUp()
+        try! TLS.initialize()
+    }
+    #endif
     
     func testClientReadWriteTLSWithGoogle() {
         let socket = try! Socket(.inet)
