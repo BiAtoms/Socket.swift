@@ -155,7 +155,7 @@ open class TLS {
             tls_free(context);
         #else
             SSLClose(context)
-            fdPtr.deallocate(capacity: 1)
+            fdPtr.deallocate()
         #endif
     }
 }
