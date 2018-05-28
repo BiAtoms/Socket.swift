@@ -1,6 +1,8 @@
-![Platform Linux](https://img.shields.io/badge/platform-Linux-green.svg)
+[![Platform Linux](https://img.shields.io/badge/platform-linux-brightgreen.svg)](#)
 [![Platform iOS macOS tvOS](https://img.shields.io/cocoapods/p/Socket.swift.svg?style=flat)](https://github.com/BiAtoms/Socket.swift)
 [![Cocoapods Compatible](https://img.shields.io/cocoapods/v/Socket.swift.svg)](https://cocoapods.org/pods/Socket.swift)
+[![Carthage Compatible](https://img.shields.io/badge/carthage-compatible-brightgreen.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![License](https://img.shields.io/github/license/BiAtoms/Socket.swift.svg)](https://github.com/BiAtoms/Socket.swift/blob/master/LICENSE)
 [![Build Status - Master](https://travis-ci.org/BiAtoms/Socket.swift.svg?branch=master)](https://travis-ci.org/BiAtoms/Socket.swift)
 
 # Socket.swift
@@ -67,6 +69,25 @@ Then, run the following command:
 $ pod install
 ```
 
+### Carthage
+
+[Carthage](https://github.com/Carthage/Carthage) is a decentralized dependency manager that builds your dependencies and provides you with binary frameworks.
+
+You can install Carthage with [Homebrew](http://brew.sh/) using the following command:
+
+```bash
+$ brew update
+$ brew install carthage
+```
+
+To integrate Socket.swift into your Xcode project using Carthage, specify it in your `Cartfile`:
+
+```ogdl
+github "BiAtoms/Socket.swift" ~> 2.2
+```
+
+Run `carthage update` to build the framework and drag the built `SocketSwift.framework` into your Xcode project.
+
 ### Swift Package Manager
 
 The [Swift Package Manager](https://swift.org/package-manager/) is a tool for automating the distribution of Swift code and is integrated into the `swift` compiler. It is in early development, but Socket.swift does support its use on supported platforms. 
@@ -75,12 +96,12 @@ Once you have your Swift package set up, adding Socket.swift as a dependency is 
 
 ```swift
 dependencies: [
-    .Package(url: "https://github.com/BiAtoms/Socket.swift.git", majorVersion: 2)
+    .package(url: "https://github.com/BiAtoms/Socket.swift.git", from: "2.0.0")
 ]
 ```
 
 ### Manually
-Just drag and drop the files in the [Sources](Sources) folder.
+Just drag and drop the files in the [Sources](https://github.com/BiAtoms/Socket.swift/blob/master/Sources) folder.
 
 ## Authors
 
@@ -90,4 +111,4 @@ See also the list of [contributors](https://github.com/BiAtoms/Socket.swift/cont
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/BiAtoms/Socket.swift/blob/master/LICENSE) file for details
