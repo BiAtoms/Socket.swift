@@ -59,7 +59,7 @@ To integrate Socket.swift into your Xcode project using CocoaPods, specify it in
 ```ruby
 source 'https://github.com/CocoaPods/Specs.git'
 target '<Your Target Name>' do
-    pod 'Socket.swift', '~> 2.2'
+    pod 'Socket.swift', '~> 2.3'
 end
 ```
 
@@ -83,7 +83,7 @@ $ brew install carthage
 To integrate Socket.swift into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "BiAtoms/Socket.swift" ~> 2.2
+github "BiAtoms/Socket.swift" ~> 2.3
 ```
 
 Run `carthage update` to build the framework and drag the built `SocketSwift.framework` into your Xcode project.
