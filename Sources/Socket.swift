@@ -15,7 +15,7 @@ public typealias SocketAddress = sockaddr
 public typealias TimeValue = timeval
 
 open class Socket {
-    open let fileDescriptor: FileDescriptor
+    public let fileDescriptor: FileDescriptor
     open var tls: TLS?
     
     required public init(with fileDescriptor: FileDescriptor) {
