@@ -21,8 +21,8 @@ open class TLS {
     open var fd: FileDescriptor { return fdPtr.pointee }
     open private(set) var fdPtr = UnsafeMutablePointer<FileDescriptor>.allocate(capacity: 1)
     #else
-    open private(set) static var isInitialized = false
-    open static func initialize() throws {
+    public private(set) static var isInitialized = false
+    public static func initialize() throws {
         guard !isInitialized else { return }
         try ing { tls_init() }
         isInitialized = true
