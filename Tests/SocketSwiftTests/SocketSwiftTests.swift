@@ -90,9 +90,14 @@ class SocketSwiftTests: XCTestCase {
     }
     
     func testError() {
-        XCTAssertThrowsError(try Socket.tcpListening(port: 80), "Should throw permission denied") { err in
-            XCTAssertEqual(err as? Socket.Error, Socket.Error(errno: EACCES))
+        let server = try? Socket.tcpListening(port: 80)
+        XCTAssertThrowsError(try Socket.tcpListening(port: 80), "Should throw") { err in
+            XCTAssert(err is Socket.Error)
+            let socketError = err as! Socket.Error
+            XCTAssert(socketError == Socket.Error(errno: EADDRINUSE) || socketError == Socket.Error(errno: EACCES))
         }
+        
+        server?.close()
     }
     
     func testPort() throws {
