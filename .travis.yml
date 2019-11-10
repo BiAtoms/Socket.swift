@@ -17,20 +17,4 @@ matrix:
       osx_image: xcode11.2
       dist: trusty
       sudo: required
-      env: ACTION=test  PLATFORM=Mac     DESTINATION='platform=OS X'
-      script: set -o pipefail && xcodebuild -scheme SocketSwift -destination "$DESTINATION" $ACTION | xcpretty
-
-    - os: osx
-      osx_image: xcode11.2
-      dist: trusty
-      sudo: required
-      env: ACTION=test  PLATFORM=iOS     DESTINATION='platform=iOS Simulator,name=iPhone 11'
-      script: set -o pipefail && xcodebuild -scheme SocketSwift -destination "$DESTINATION" $ACTION | xcpretty
-
-    - os: osx
-      osx_image: xcode11.2
-      dist: trusty
-      sudo: required
-      env: ACTION=test  PLATFORM=tvOS    DESTINATION='platform=tvOS Simulator,name=Apple TV'
-      script: set -o pipefail && xcodebuild -scheme SocketSwift -destination "$DESTINATION" $ACTION | xcpretty
-
+      script: set -o pipefail && xcodebuild -scheme SocketSwift -destination "platform=OS X" test | xcpretty && xcodebuild -scheme SocketSwift -destination "platform=iOS Simulator,name=iPhone 11" test | xcpretty && xcodebuild -scheme SocketSwift -destination "platform=tvOS Simulator,name=Apple TV" test | xcpretty
