@@ -17,6 +17,7 @@ extension Socket {
     }
     
     public class Option<T>: BaseOption {}
+    public class TCPOption<T>: BaseOption {}
 }
 
 extension Socket.BaseOption {
@@ -37,5 +38,8 @@ extension Socket.BaseOption {
     #if !os(Linux)
     public static let noSignalPipe = Option<Bool>(rawValue: SO_NOSIGPIPE)
     #endif
-    
+}
+
+extension Socket.BaseOption {
+    public static let tcpNoDelay = Socket.TCPOption<Bool>(rawValue: TCP_NODELAY)
 }

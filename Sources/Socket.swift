@@ -96,7 +96,14 @@ open class Socket {
         
         try ing { setsockopt(fileDescriptor, SOL_SOCKET, option.rawValue, &state, socklen_t(size)) }
     }
-    
+
+    open func setTCP<T>(option: TCPOption<T>, _ value: T) throws {
+        let size = value is Bool ? MemoryLayout<Int32>.size : MemoryLayout<T>.size
+        var state: Any = value is Bool ? (value as! Bool == true ? 1 : 0) : value
+
+        try ing { setsockopt(fileDescriptor, Protocol.tcp.rawValue, option.rawValue, &state, socklen_t(size)) }
+    }
+
     open func bind(port: Port, address: String? = nil) throws {
         try bind(address: SocketAddress(port: port, address: address))
     }
