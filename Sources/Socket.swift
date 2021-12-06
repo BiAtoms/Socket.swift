@@ -212,6 +212,27 @@ open class Socket {
 
         return Port(address.sin_port.bigEndian)
     }
+
+    /// Returns the remote host address to which the socket is bound.
+    ///
+    /// - Returns: Remote host address to which the socket is bound.
+    open func remoteAddress() throws -> String {
+
+        var address = sockaddr_in()
+        var len = socklen_t(MemoryLayout.size(ofValue: address))
+        try withUnsafeMutableBytes(of: &address) { pointer in
+            let pSockaddr = pointer.baseAddress!.assumingMemoryBound(to: sockaddr.self)
+            try ing { getpeername(fileDescriptor, pSockaddr, &len) }
+        }
+        var buffer: [CChar] = .init(repeating: 0, count: Int(INET_ADDRSTRLEN))
+        let remoteAddress: String = try buffer.withUnsafeMutableBufferPointer { pointer in
+            guard let cString = inet_ntop(AF_INET, &address.sin_addr, pointer.baseAddress, socklen_t(INET_ADDRSTRLEN)) else {
+                throw Socket.Error(errno: errno)
+            }
+            return String(cString: cString)
+        }
+        return remoteAddress
+    }
 }
 
 extension Socket {
