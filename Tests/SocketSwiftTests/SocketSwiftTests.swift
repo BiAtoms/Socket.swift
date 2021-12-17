@@ -79,7 +79,11 @@ class SocketSwiftTests: XCTestCase {
         
         let server = try Socket.tcpListening(port: 8090)
         let client = try Socket(.inet)
+        #if canImport(ObjectiveC)
         try client.set(option: .receiveTimeout, TimeValue(seconds: 0, microseconds: 50*1000))
+        #else
+        try client.set(option: .receiveTimeout, TimeValue(tv_sec: 0, tv_usec: 50*1000))
+        #endif
         try client.connect(port: 8090)
         
         XCTAssertThrowsError(try client.read(), "Should throw timeout error") { err in
