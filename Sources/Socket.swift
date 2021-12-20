@@ -206,10 +206,10 @@ open class Socket {
     open func port() throws -> Port {
         var address = sockaddr_in()
         var len = socklen_t(MemoryLayout.size(ofValue: address))
-        let ptr = UnsafeMutableRawPointer(&address).assumingMemoryBound(to: sockaddr.self)
-
-        try ing { getsockname(fileDescriptor, ptr, &len) }
-
+        try withUnsafeMutableBytes(of: &address, { pointer in
+            let pSockadddr = pointer.baseAddress!.assumingMemoryBound(to: sockaddr.self)
+            try ing { getsockname(fileDescriptor, pSockadddr, &len) }
+        })
         return Port(address.sin_port.bigEndian)
     }
 
