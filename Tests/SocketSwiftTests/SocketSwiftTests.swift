@@ -33,10 +33,10 @@ class SocketSwiftTests: XCTestCase {
         
         DispatchQueue(label: "").async {
             var tls = TLS.Configuration()
-            
+
             #if !os(Linux)
-                let path = Bundle(for: SocketSwiftTests.self).url(forResource: "Socket.swift", withExtension: "pfx")!
-                tls.certificate = TLS.importCert(at: path, password: "orkhan1234")
+            let file = URL(string: #file)!.appendingPathComponent("../../Socket.swift.pfx").standardized
+                tls.certificate = TLS.importCert(at: file, password: "orkhan1234")
             #else
                 let file = URL(string: #file)!.appendingPathComponent("../../Socket.swift").standardized
                 tls.certificate = TLS.importCert(at: file.appendingPathExtension("csr"),
