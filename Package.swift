@@ -10,7 +10,7 @@ let package = Package(
             targets: ["SocketSwift"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/Zewo/CLibreSSL.git", from: "3.1.0"),
+        .package(url: "https://github.com/Zewo/CLibreSSL", from: "3.1.0"),
     ],
     targets: [
         .target(
