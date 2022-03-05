@@ -17,6 +17,7 @@ extension Socket {
     }
     
     public class Option<T>: BaseOption {}
+    public class IPOption<T>: BaseOption {}
     public class TCPOption<T>: BaseOption {}
 }
 
@@ -42,4 +43,8 @@ extension Socket.BaseOption {
 
 extension Socket.BaseOption {
     public static let tcpNoDelay = Socket.TCPOption<Bool>(rawValue: TCP_NODELAY)
+}
+
+extension Socket.BaseOption {
+    public static let ipBoundInterface = Socket.IPOption<UInt32>(rawValue: IP_BOUND_IF)
 }

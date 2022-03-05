@@ -46,6 +46,18 @@ open class Socket {
         let received = try ing { recv(fileDescriptor, buffer, size, 0) }
         return received
     }
+
+    open func recvfrom(_ buffer: UnsafeMutableRawPointer, size: Int) throws -> (String, Int) {
+        var sockaddr = sockaddr()
+        var sockaddrlen = socklen_t(MemoryLayout.size(ofValue: sockaddr))
+        let received = try ing { OS.recvfrom(fileDescriptor, buffer, size, 0, &sockaddr, &sockaddrlen) }
+
+        var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+        guard getnameinfo(&sockaddr, sockaddrlen, &hostname, socklen_t(hostname.count), nil, socklen_t(0), NI_NUMERICHOST) == 0 else {
+            return ("???", received)
+        }
+        return (String(cString: hostname), received)
+    }
     
     /// Writes all `length` of the `buffer` into the socket by calling
     /// write(_:size:) in a loop.
@@ -97,11 +109,25 @@ open class Socket {
         try ing { setsockopt(fileDescriptor, SOL_SOCKET, option.rawValue, &state, socklen_t(size)) }
     }
 
+    open func setIP<T>(option: IPOption<T>, _ value: T) throws {
+        let size = value is Bool ? MemoryLayout<Int32>.size : MemoryLayout<T>.size
+        var state: Any = value is Bool ? (value as! Bool == true ? 1 : 0) : value
+
+        try ing { setsockopt(fileDescriptor, Protocol.ip.rawValue, option.rawValue, &state, socklen_t(size)) }
+    }
+
     open func setTCP<T>(option: TCPOption<T>, _ value: T) throws {
         let size = value is Bool ? MemoryLayout<Int32>.size : MemoryLayout<T>.size
         var state: Any = value is Bool ? (value as! Bool == true ? 1 : 0) : value
 
         try ing { setsockopt(fileDescriptor, Protocol.tcp.rawValue, option.rawValue, &state, socklen_t(size)) }
+    }
+
+    open func sendto(_ buffer: UnsafeRawPointer, length: Int, port: Port, address: String) throws {
+        var buffer = buffer
+        var addr = SocketAddress(port: port, address: address)
+
+        try ing { OS.sendto(fileDescriptor, buffer, length, 0, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
     }
 
     open func bind(port: Port, address: String? = nil) throws {
@@ -112,7 +138,7 @@ open class Socket {
         var addr = address
         try ing { OS.bind(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
     }
-    
+
     open func connect(port: Port, address: String? = nil) throws {
         try connect(address: SocketAddress(port: port, address: address))
     }
@@ -251,6 +277,14 @@ extension Socket {
 extension Socket {
     open func write(_ bytes: [Byte]) throws {
         try self.write(bytes, length: bytes.count)
+    }
+
+    open func sendto(_ bytes: [Byte], port: Port, address: String) throws {
+        try self.sendto(bytes, length: bytes.count, port: port, address: address)
+    }
+
+    open func recvfrom(_ bytes: inout [Byte]) throws -> (String, Int) {
+        try self.recvfrom(&bytes, size: bytes.count)
     }
 }
 
