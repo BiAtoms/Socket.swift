@@ -46,5 +46,7 @@ extension Socket.BaseOption {
 }
 
 extension Socket.BaseOption {
+    #if !os(Linux)
     public static let ipBoundInterface = Socket.IPOption<UInt32>(rawValue: IP_BOUND_IF)
+    #endif
 }
