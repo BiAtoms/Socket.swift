@@ -47,16 +47,20 @@ open class Socket {
         return received
     }
 
-    open func recvfrom(_ buffer: UnsafeMutableRawPointer, size: Int) throws -> (String, Int) {
+    open func recvfrom(_ buffer: UnsafeMutableRawPointer, size: Int) throws -> (String, UInt16, Int) {
         var sockaddr = sockaddr()
         var sockaddrlen = socklen_t(MemoryLayout.size(ofValue: sockaddr))
         let received = try ing { OS.recvfrom(fileDescriptor, buffer, size, 0, &sockaddr, &sockaddrlen) }
 
+        let addr_in = withUnsafePointer(to: &sockaddr) {
+            $0.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { $0.pointee }
+        }
+        let port = addr_in.sin_port.bigEndian
         var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
         guard getnameinfo(&sockaddr, sockaddrlen, &hostname, socklen_t(hostname.count), nil, socklen_t(0), NI_NUMERICHOST) == 0 else {
-            return ("???", received)
+            return ("???", port, received)
         }
-        return (String(cString: hostname), received)
+        return (String(cString: hostname), port, received)
     }
     
     /// Writes all `length` of the `buffer` into the socket by calling
@@ -310,7 +314,7 @@ extension Socket {
         try self.sendto(bytes, length: bytes.count, port: port, address: address)
     }
 
-    open func recvfrom(_ bytes: inout [Byte]) throws -> (String, Int) {
+    open func recvfrom(_ bytes: inout [Byte]) throws -> (String, UInt16, Int) {
         try self.recvfrom(&bytes, size: bytes.count)
     }
 }
