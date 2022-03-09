@@ -109,15 +109,15 @@ class SocketSwiftTests: XCTestCase {
         XCTAssertEqual(try server.port(), 8090)
         server.close()
     }
-    
-    static var allTests = [
-        ("testPort", testPort),
-        ("testError", testError),
-        ("testSetOption", testSetOption),
-        ("testClientServerReadWrite", testClientServerReadWrite),
-        ("testClientServerReadWriteTLS", testClientServerReadWriteTLS),
-        ("testClientReadWriteTLSWithGoogle", testClientReadWriteTLSWithGoogle),
-    ]
+
+    func testGetAvailableInterfaces() {
+        let addresses = try Socket.availableInterfacesAndIpAddresses(family: .inet)
+        //print("Available interfaces & addresses: \(addresses)")
+        XCTAssertTrue(!addresses.isEmpty)
+        addresses.values.forEach { address in
+            XCTAssertEqual(address.components(separatedBy: ".").count, 4)
+        }
+    }
 }
 
 private extension String {
