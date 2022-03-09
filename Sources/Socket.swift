@@ -224,7 +224,7 @@ open class Socket {
     }
 
     /// Returns the available network interfaces and their respective IP addresses
-    public static func availableInterfacesAndIpAddresses() -> [String: String] {
+    public static func availableInterfacesAndIpAddresses(family: Family = .inet) -> [String: String] {
 
         var addresses: [String: String] = [:]
         var ifaddr: UnsafeMutablePointer<ifaddrs>?
@@ -233,12 +233,12 @@ open class Socket {
         guard let firstAddr = ifaddr else { return [:] }
 
         for ptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
-            let flags = Int32(ptr.pointee.ifa_flags)
+            let flags = ptr.pointee.ifa_flags
             let addr = ptr.pointee.ifa_addr.pointee
 
-            if (flags & (IFF_UP|IFF_RUNNING|IFF_LOOPBACK)) == (IFF_UP|IFF_RUNNING) {
+            if (UInt32(flags) & (UInt32(IFF_UP|IFF_RUNNING|IFF_LOOPBACK))) == (IFF_UP|IFF_RUNNING) {
 
-                if addr.sa_family == UInt8(AF_INET) || addr.sa_family == UInt8(AF_INET6) {
+                if addr.sa_family == UInt8(family.rawValue) {
                     var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
                     if (getnameinfo(ptr.pointee.ifa_addr, socklen_t(addr.sa_len), &hostname, socklen_t(hostname.count), nil, socklen_t(0), NI_NUMERICHOST) == 0) {
                         let name = String(cString: ptr.pointee.ifa_name)
@@ -336,6 +336,16 @@ extension SocketAddress {
             UnsafePointer<SocketAddress>(OpaquePointer($0)).pointee
         }
     }
+
+    #if os(Linux)
+    public var sa_len: Int {
+        switch Int32(sa_family) {
+            case AF_INET: return MemoryLayout<sockaddr_in>.size
+            case AF_INET6: return MemoryLayout<sockaddr_in6>.size
+            default: return MemoryLayout<sockaddr_storage>.size
+        }
+    }
+    #endif
 }
 
 extension TimeValue {
