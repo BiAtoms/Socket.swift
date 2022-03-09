@@ -128,7 +128,6 @@ open class Socket {
     }
 
     open func sendto(_ buffer: UnsafeRawPointer, length: Int, port: Port, address: String) throws {
-        var buffer = buffer
         var addr = SocketAddress(port: port, address: address)
 
         try ing { OS.sendto(fileDescriptor, buffer, length, 0, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
