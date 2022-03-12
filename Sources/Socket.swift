@@ -191,8 +191,27 @@ open class Socket {
         //-1 will throw error, 0 means timeout, otherwise success
         return try ing { rc } != 0
     }
-    
-    
+
+    /// Waits for one of multiple sockets to become ready.
+    /// Returns the sockets that became ready within the specified `timeout`.
+    public static func wait(on sockets: [Socket], for option: WaitOption, timeout: TimeInterval, retryOnInterrupt: Bool = true) throws -> [Socket] {
+
+        var pollfds = sockets.map { pollfd(fd: $0.fileDescriptor, events: Int16(option.rawValue), revents: 0) }
+        var rc: Int32 = 0
+        repeat {
+            rc = poll(&pollfds, UInt32(sockets.count), Int32(timeout * 1000))
+        } while retryOnInterrupt && rc == -1 && errno == EINTR //retry on interrupt
+        let result = try ing { rc }
+        guard result > 0 else { return [] }
+        var ready: [Socket] = []
+        for (i, pollfd) in pollfds.enumerated() {
+            if pollfd.revents & Int16(option.rawValue) == option.rawValue {
+                ready.append(sockets[i])
+            }
+        }
+        return ready
+    }
+
     /// Resolves domain into connectable addresses.
     ///
     /// - Parameters:
