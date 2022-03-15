@@ -198,8 +198,13 @@ open class Socket {
 
         var pollfds = sockets.map { pollfd(fd: $0.fileDescriptor, events: Int16(option.rawValue), revents: 0) }
         var rc: Int32 = 0
+#if canImport(ObjectiveC)
+        let numFds = UInt32(sockets.count)
+#else
+        let numFds = UInt(sockets.count)
+#endif
         repeat {
-            rc = poll(&pollfds, UInt32(sockets.count), Int32(timeout * 1000))
+            rc = poll(&pollfds, numFds, Int32(timeout * 1000))
         } while retryOnInterrupt && rc == -1 && errno == EINTR //retry on interrupt
         let result = try ing { rc }
         guard result > 0 else { return [] }
