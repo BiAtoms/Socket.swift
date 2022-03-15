@@ -111,7 +111,7 @@ class SocketSwiftTests: XCTestCase {
     }
 
     func testGetAvailableInterfaces() {
-        let addresses = try Socket.availableInterfacesAndIpAddresses(family: .inet)
+        let addresses = Socket.availableInterfacesAndIpAddresses(family: .inet)
         //print("Available interfaces & addresses: \(addresses)")
         XCTAssertTrue(!addresses.isEmpty)
         addresses.values.forEach { address in
