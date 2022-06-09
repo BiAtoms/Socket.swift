@@ -316,7 +316,7 @@ open class Socket {
 }
 
 extension Socket {
-    open class func tcpListening(port: Port, address: String? = nil, maxPendingConnection: Int32 = SOMAXCONN) throws -> Self {
+    public class func tcpListening(port: Port, address: String? = nil, maxPendingConnection: Int32 = SOMAXCONN) throws -> Self {
         
         let socket = try self.init(.inet)
         try socket.set(option: .reuseAddress, true)
@@ -329,15 +329,15 @@ extension Socket {
 
 
 extension Socket {
-    open func write(_ bytes: [Byte]) throws {
+    public func write(_ bytes: [Byte]) throws {
         try self.write(bytes, length: bytes.count)
     }
 
-    open func sendto(_ bytes: [Byte], port: Port, address: String) throws {
+    public func sendto(_ bytes: [Byte], port: Port, address: String) throws {
         try self.sendto(bytes, length: bytes.count, port: port, address: address)
     }
 
-    open func recvfrom(_ bytes: inout [Byte]) throws -> (String, UInt16, Int) {
+    public func recvfrom(_ bytes: inout [Byte]) throws -> (String, UInt16, Int) {
         try self.recvfrom(&bytes, size: bytes.count)
     }
 }
