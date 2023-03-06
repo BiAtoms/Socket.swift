@@ -167,6 +167,8 @@ open class Socket {
         
         public static let read = WaitOption(rawValue: POLLIN)
         public static let write = WaitOption(rawValue: POLLOUT)
+        public static let hup = WaitOption(rawValue: POLLHUP)
+        public static let err = WaitOption(rawValue: POLLERR)
     }
     		
     
