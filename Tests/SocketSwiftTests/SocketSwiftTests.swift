@@ -33,10 +33,10 @@ class SocketSwiftTests: XCTestCase {
         
         DispatchQueue(label: "").async {
             var tls = TLS.Configuration()
-            
+
             #if !os(Linux)
-                let path = Bundle(for: SocketSwiftTests.self).url(forResource: "Socket.swift", withExtension: "pfx")!
-                tls.certificate = TLS.importCert(at: path, password: "orkhan1234")
+            let file = URL(string: #file)!.appendingPathComponent("../../Socket.swift.pfx").standardized
+                tls.certificate = TLS.importCert(at: file, password: "orkhan1234")
             #else
                 let file = URL(string: #file)!.appendingPathComponent("../../Socket.swift").standardized
                 tls.certificate = TLS.importCert(at: file.appendingPathExtension("csr"),
@@ -79,7 +79,11 @@ class SocketSwiftTests: XCTestCase {
         
         let server = try Socket.tcpListening(port: 8090)
         let client = try Socket(.inet)
+        #if canImport(ObjectiveC)
         try client.set(option: .receiveTimeout, TimeValue(seconds: 0, microseconds: 50*1000))
+        #else
+        try client.set(option: .receiveTimeout, TimeValue(tv_sec: 0, tv_usec: 50*1000))
+        #endif
         try client.connect(port: 8090)
         
         XCTAssertThrowsError(try client.read(), "Should throw timeout error") { err in
@@ -105,15 +109,15 @@ class SocketSwiftTests: XCTestCase {
         XCTAssertEqual(try server.port(), 8090)
         server.close()
     }
-    
-    static var allTests = [
-        ("testPort", testPort),
-        ("testError", testError),
-        ("testSetOption", testSetOption),
-        ("testClientServerReadWrite", testClientServerReadWrite),
-        ("testClientServerReadWriteTLS", testClientServerReadWriteTLS),
-        ("testClientReadWriteTLSWithGoogle", testClientReadWriteTLSWithGoogle),
-    ]
+
+    func testGetAvailableInterfaces() {
+        let addresses = Socket.availableInterfacesAndIpAddresses(family: .inet)
+        //print("Available interfaces & addresses: \(addresses)")
+        XCTAssertTrue(!addresses.isEmpty)
+        addresses.values.forEach { address in
+            XCTAssertEqual(address.components(separatedBy: ".").count, 4)
+        }
+    }
 }
 
 private extension String {

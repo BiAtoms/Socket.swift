@@ -46,6 +46,22 @@ open class Socket {
         let received = try ing { recv(fileDescriptor, buffer, size, 0) }
         return received
     }
+
+    open func recvfrom(_ buffer: UnsafeMutableRawPointer, size: Int) throws -> (String, UInt16, Int) {
+        var sockaddr = sockaddr()
+        var sockaddrlen = socklen_t(MemoryLayout.size(ofValue: sockaddr))
+        let received = try ing { OS.recvfrom(fileDescriptor, buffer, size, 0, &sockaddr, &sockaddrlen) }
+
+        let addr_in = withUnsafePointer(to: &sockaddr) {
+            $0.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { $0.pointee }
+        }
+        let port = addr_in.sin_port.bigEndian
+        var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+        guard getnameinfo(&sockaddr, sockaddrlen, &hostname, socklen_t(hostname.count), nil, socklen_t(0), NI_NUMERICHOST) == 0 else {
+            return ("???", port, received)
+        }
+        return (String(cString: hostname), port, received)
+    }
     
     /// Writes all `length` of the `buffer` into the socket by calling
     /// write(_:size:) in a loop.
@@ -96,7 +112,27 @@ open class Socket {
         
         try ing { setsockopt(fileDescriptor, SOL_SOCKET, option.rawValue, &state, socklen_t(size)) }
     }
-    
+
+    open func setIP<T>(option: IPOption<T>, _ value: T) throws {
+        let size = value is Bool ? MemoryLayout<Int32>.size : MemoryLayout<T>.size
+        var state: Any = value is Bool ? (value as! Bool == true ? 1 : 0) : value
+
+        try ing { setsockopt(fileDescriptor, Protocol.ip.rawValue, option.rawValue, &state, socklen_t(size)) }
+    }
+
+    open func setTCP<T>(option: TCPOption<T>, _ value: T) throws {
+        let size = value is Bool ? MemoryLayout<Int32>.size : MemoryLayout<T>.size
+        var state: Any = value is Bool ? (value as! Bool == true ? 1 : 0) : value
+
+        try ing { setsockopt(fileDescriptor, Protocol.tcp.rawValue, option.rawValue, &state, socklen_t(size)) }
+    }
+
+    open func sendto(_ buffer: UnsafeRawPointer, length: Int, port: Port, address: String) throws {
+        var addr = SocketAddress(port: port, address: address)
+
+        try ing { OS.sendto(fileDescriptor, buffer, length, 0, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
+    }
+
     open func bind(port: Port, address: String? = nil) throws {
         try bind(address: SocketAddress(port: port, address: address))
     }
@@ -105,7 +141,7 @@ open class Socket {
         var addr = address
         try ing { OS.bind(fileDescriptor, &addr, socklen_t(MemoryLayout<SocketAddress>.size)) }
     }
-    
+
     open func connect(port: Port, address: String? = nil) throws {
         try connect(address: SocketAddress(port: port, address: address))
     }
@@ -131,6 +167,8 @@ open class Socket {
         
         public static let read = WaitOption(rawValue: POLLIN)
         public static let write = WaitOption(rawValue: POLLOUT)
+        public static let hup = WaitOption(rawValue: POLLHUP)
+        public static let err = WaitOption(rawValue: POLLERR)
     }
     		
     
@@ -155,8 +193,32 @@ open class Socket {
         //-1 will throw error, 0 means timeout, otherwise success
         return try ing { rc } != 0
     }
-    
-    
+
+    /// Waits for one of multiple sockets to become ready.
+    /// Returns the sockets that became ready within the specified `timeout`.
+    public static func wait(on sockets: [Socket], for option: WaitOption, timeout: TimeInterval, retryOnInterrupt: Bool = true) throws -> [Socket] {
+
+        var pollfds = sockets.map { pollfd(fd: $0.fileDescriptor, events: Int16(option.rawValue), revents: 0) }
+        var rc: Int32 = 0
+#if canImport(ObjectiveC)
+        let numFds = UInt32(sockets.count)
+#else
+        let numFds = UInt(sockets.count)
+#endif
+        repeat {
+            rc = poll(&pollfds, numFds, Int32(timeout * 1000))
+        } while retryOnInterrupt && rc == -1 && errno == EINTR //retry on interrupt
+        let result = try ing { rc }
+        guard result > 0 else { return [] }
+        var ready: [Socket] = []
+        for (i, pollfd) in pollfds.enumerated() {
+            if pollfd.revents & Int16(option.rawValue) == option.rawValue {
+                ready.append(sockets[i])
+            }
+        }
+        return ready
+    }
+
     /// Resolves domain into connectable addresses.
     ///
     /// - Parameters:
@@ -186,8 +248,35 @@ open class Socket {
         assert(!result.isEmpty)
         return result
     }
-    
-    
+
+    /// Returns the available network interfaces and their respective IP addresses
+    public static func availableInterfacesAndIpAddresses(family: Family = .inet) -> [String: String] {
+
+        var addresses: [String: String] = [:]
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddr) == 0 else { return [:] }
+        defer { freeifaddrs(ifaddr) }
+        guard let firstAddr = ifaddr else { return [:] }
+
+        for ptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
+            let flags = ptr.pointee.ifa_flags
+            let addr = ptr.pointee.ifa_addr.pointee
+
+            if (UInt32(flags) & (UInt32(IFF_UP|IFF_RUNNING|IFF_LOOPBACK))) == (IFF_UP|IFF_RUNNING) {
+
+                if addr.sa_family == UInt8(family.rawValue) {
+                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                    if (getnameinfo(ptr.pointee.ifa_addr, socklen_t(addr.sa_len), &hostname, socklen_t(hostname.count), nil, socklen_t(0), NI_NUMERICHOST) == 0) {
+                        let name = String(cString: ptr.pointee.ifa_name)
+                        let address = String(cString: hostname)
+                        addresses[name] = address
+                    }
+                }
+            }
+        }
+        return addresses
+    }
+
     open func startTls(_ config: TLS.Configuration) throws {
         tls = try TLS(self.fileDescriptor, config)
         try tls?.handshake()
@@ -199,16 +288,37 @@ open class Socket {
     open func port() throws -> Port {
         var address = sockaddr_in()
         var len = socklen_t(MemoryLayout.size(ofValue: address))
-        let ptr = UnsafeMutableRawPointer(&address).assumingMemoryBound(to: sockaddr.self)
-
-        try ing { getsockname(fileDescriptor, ptr, &len) }
-
+        try withUnsafeMutableBytes(of: &address, { pointer in
+            let pSockadddr = pointer.baseAddress!.assumingMemoryBound(to: sockaddr.self)
+            try ing { getsockname(fileDescriptor, pSockadddr, &len) }
+        })
         return Port(address.sin_port.bigEndian)
+    }
+
+    /// Returns the remote host address to which the socket is bound.
+    ///
+    /// - Returns: Remote host address to which the socket is bound.
+    open func remoteAddress() throws -> String {
+
+        var address = sockaddr_in()
+        var len = socklen_t(MemoryLayout.size(ofValue: address))
+        try withUnsafeMutableBytes(of: &address) { pointer in
+            let pSockaddr = pointer.baseAddress!.assumingMemoryBound(to: sockaddr.self)
+            try ing { getpeername(fileDescriptor, pSockaddr, &len) }
+        }
+        var buffer: [CChar] = .init(repeating: 0, count: Int(INET_ADDRSTRLEN))
+        let remoteAddress: String = try buffer.withUnsafeMutableBufferPointer { pointer in
+            guard let cString = inet_ntop(AF_INET, &address.sin_addr, pointer.baseAddress, socklen_t(INET_ADDRSTRLEN)) else {
+                throw Socket.Error(errno: errno)
+            }
+            return String(cString: cString)
+        }
+        return remoteAddress
     }
 }
 
 extension Socket {
-    open class func tcpListening(port: Port, address: String? = nil, maxPendingConnection: Int32 = SOMAXCONN) throws -> Self {
+    public class func tcpListening(port: Port, address: String? = nil, maxPendingConnection: Int32 = SOMAXCONN) throws -> Self {
         
         let socket = try self.init(.inet)
         try socket.set(option: .reuseAddress, true)
@@ -221,8 +331,16 @@ extension Socket {
 
 
 extension Socket {
-    open func write(_ bytes: [Byte]) throws {
+    public func write(_ bytes: [Byte]) throws {
         try self.write(bytes, length: bytes.count)
+    }
+
+    public func sendto(_ bytes: [Byte], port: Port, address: String) throws {
+        try self.sendto(bytes, length: bytes.count, port: port, address: address)
+    }
+
+    public func recvfrom(_ bytes: inout [Byte]) throws -> (String, UInt16, Int) {
+        try self.recvfrom(&bytes, size: bytes.count)
     }
 }
 
@@ -244,6 +362,16 @@ extension SocketAddress {
             UnsafePointer<SocketAddress>(OpaquePointer($0)).pointee
         }
     }
+
+    #if os(Linux)
+    public var sa_len: Int {
+        switch Int32(sa_family) {
+            case AF_INET: return MemoryLayout<sockaddr_in>.size
+            case AF_INET6: return MemoryLayout<sockaddr_in6>.size
+            default: return MemoryLayout<sockaddr_storage>.size
+        }
+    }
+    #endif
 }
 
 extension TimeValue {

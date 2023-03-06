@@ -162,7 +162,7 @@ open class TLS {
 
 extension TLS {
     #if !os(Linux)
-    open class func importCert(at path: URL, password: String) -> Certificate {
+    public class func importCert(at path: URL, password: String) -> Certificate {
         let data = FileManager.default.contents(atPath: path.path)! as NSData
         let options: NSDictionary = [kSecImportExportPassphrase: password]
 
@@ -178,7 +178,7 @@ extension TLS {
     }
     
     #else
-    open class func importCert(at path: URL, withKey key: URL, password: String?) -> Certificate {
+    public class func importCert(at path: URL, withKey key: URL, password: String?) -> Certificate {
         var certLen = 0
         let certMem = tls_load_file(path.path, &certLen, nil)!
         defer { free(certMem) }

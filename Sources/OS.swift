@@ -27,6 +27,8 @@ internal struct OS {
     static let listen = Glibc.listen
     static let accept = Glibc.accept
     static let write = Glibc.write
+    static let sendto = Glibc.sendto
+    static let recvfrom = Glibc.recvfrom
     #else
     static let close = Darwin.close
     static let bind = Darwin.bind
@@ -34,5 +36,7 @@ internal struct OS {
     static let listen = Darwin.listen
     static let accept = Darwin.accept
     static let write = Darwin.write
+    static let sendto = Darwin.sendto
+    static let recvfrom = Darwin.recvfrom
     #endif
 }

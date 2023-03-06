@@ -1,4 +1,4 @@
-// swift-tools-version:4.0
+// swift-tools-version:5.3
 
 import PackageDescription
 
@@ -9,19 +9,21 @@ let package = Package(
             name: "SocketSwift",
             targets: ["SocketSwift"]),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/Zewo/CLibreSSL", from: "3.1.0"),
+    ],
     targets: [
         .target(
             name: "SocketSwift",
-            path: "Sources"),
+            dependencies: [
+                .product(name: "CLibreSSL", package: "CLibreSSL", condition: .when(platforms: [.linux])),
+            ],
+            path: "Sources",
+            exclude: ["Info.plist"]
+        ),
         .testTarget(
             name: "SocketSwiftTests",
-            dependencies: ["SocketSwift"]),
+            dependencies: ["SocketSwift"]
+        ),
     ]
 )
-
-#if os(Linux)
-package.dependencies = [
-    .package(url: "https://github.com/Zewo/CLibreSSL.git", from: "3.1.0"),
-]
-#endif
